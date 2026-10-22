@@ -3,3 +3,19 @@ __pycache__/
 *.pyc
 .env
 .vscode/
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+*.iml
+.idea/
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase functions
+functions/.env
+functions/node_modules/
