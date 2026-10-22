@@ -28,6 +28,12 @@ The curated exercise catalog (`assets/data/exercises.json`) is generated from [h
 python scripts/clean_dataset.py --no-media
 ```
 
+The `180x180` GIFs and thumbnails are **not committed** (the repository is public and the media is © Gym visual). After cloning, download them into `assets/gifs/` and `assets/thumbs/` before running the app:
+
+```bash
+python scripts/clean_dataset.py
+```
+
 - **Exercise Data & Code:** Licensed under the **MIT License**.
 - **Visual Media (`180x180` GIFs & Thumbnails):** **© Gym visual** ([https://gymvisual.com/](https://gymvisual.com/)). Used strictly for academic course purposes at original `180x180` resolution with mandatory attribution displayed in the application UI and documentation.
 - **Advisory Notice:** All plateau analysis outputs are for informational workout tracking only and do not constitute medical or professional coaching advice.

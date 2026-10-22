@@ -19,3 +19,10 @@ build/
 # Firebase functions
 functions/.env
 functions/node_modules/
+
+# Exercise media (© Gym visual) is not redistributed in the public repo;
+# fetch it with: python scripts/clean_dataset.py
+assets/gifs/*
+!assets/gifs/.gitkeep
+assets/thumbs/*
+!assets/thumbs/.gitkeep
