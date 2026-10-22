@@ -41,7 +41,7 @@ flutter run
 
 ## Dataset & Attribution
 
-The curated exercise catalog (`assets/data/exercises.json`) is generated from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (pinned commit `7455efae41b330c265e7ce5ebd`) using `scripts/clean_dataset.py`:
+The curated exercise catalog (`assets/data/exercises.json`) is generated from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (pinned commit `7455efae41b330c265e7cd4b78dfa848e7ce5ebd`) using `scripts/clean_dataset.py`:
 
 ```bash
 python scripts/clean_dataset.py --no-media
