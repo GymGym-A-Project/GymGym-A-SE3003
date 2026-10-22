@@ -14,7 +14,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .fvmrc
+          flutter-version: 3.47.5 # keep in sync with .fvmrc
           channel: stable
           cache: true
 
