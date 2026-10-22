@@ -20,6 +20,25 @@ GymGym-A is a cross-platform mobile application built for amateur gym-goers to t
 - **Plateau Analyzer:** Local deterministic 30-day rule engine + Firebase Cloud Function proxy for Google Gemini Flash (152-ID whitelist validated, 4s timeout fallback)
 - **Exercise Catalog:** Bundled static JSON subset (`assets/data/exercises.json`, `152` verified exercises across 6 primary muscle groups)
 
+## Technical Decisions
+
+| Topic | Decision |
+| :--- | :--- |
+| Flutter version | `3.47.5` stable, pinned in `.fvmrc` and CI |
+| State management | Riverpod (`flutter_riverpod`) |
+| Navigation | `go_router` with a signed-out redirect guard (WP-02) |
+| Backend | Firebase Auth + Cloud Firestore (offline persistence on) |
+| Exercise library | Bundled JSON + `180x180` media, not stored in Firestore |
+| Lint | `flutter_lints`; CI runs `flutter analyze --fatal-infos` + `flutter test` |
+
+## Getting Started
+
+```bash
+flutter pub get
+python scripts/clean_dataset.py   # downloads exercise media (not committed)
+flutter run
+```
+
 ## Dataset & Attribution
 
 The curated exercise catalog (`assets/data/exercises.json`) is generated from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (pinned commit `7455efae41b330c265e7ce5ebd`) using `scripts/clean_dataset.py`:
