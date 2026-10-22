@@ -2,4 +2,6 @@
 __pycache__/
 *.pyc
 .env
-.vscode/
+.vscode/functions/.env
+functions/node_modules/
+*.log
