@@ -61,6 +61,8 @@ flutter:
 
   assets:
     - assets/data/exercises.json
+    - assets/gifs/
+    - assets/thumbs/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
