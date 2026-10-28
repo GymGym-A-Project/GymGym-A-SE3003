@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function validItem(items, index) {
+      return items.size() <= index || (
+        items[index] is map &&
+        items[index].keys().hasOnly(['exerciseId', 'targetSets']) &&
+        items[index].exerciseId is string && items[index].exerciseId.size() > 0 &&
+        items[index].targetSets is int && items[index].targetSets > 0
+      );
+    }
+    function validItems(items) {
+      return items is list && items.size() >= 1 && items.size() <= 15 &&
+        validItem(items, 0) && validItem(items, 1) && validItem(items, 2) &&
+        validItem(items, 3) && validItem(items, 4) && validItem(items, 5) &&
+        validItem(items, 6) && validItem(items, 7) && validItem(items, 8) &&
+        validItem(items, 9) && validItem(items, 10) && validItem(items, 11) &&
+        validItem(items, 12) && validItem(items, 13) && validItem(items, 14);
+    }
+    function validRoutine(id) {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'name', 'order', 'items', 'source', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'name', 'order', 'items', 'source', 'updatedAt']) &&
+        data.id == id && data.name is string && data.name.matches('.*[^\\s].*') &&
+        data.order is int && data.source is string && data.updatedAt is timestamp &&
+        validItems(data.items);
+    }
+    function validWorkout(id) {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'routineId', 'startedAt', 'finishedAt',
+          'exerciseIds', 'exercises', 'totalVolume']) &&
+        data.keys().hasOnly(['id', 'routineId', 'startedAt', 'finishedAt',
+          'exerciseIds', 'exercises', 'totalVolume']) &&
+        data.id == id && data.routineId is string && data.routineId.size() > 0 &&
+        data.startedAt is timestamp &&
+        (data.finishedAt == null || (data.finishedAt is timestamp &&
+          data.finishedAt >= data.startedAt)) &&
+        data.exercises is list && data.exercises.size() >= 1 && data.exercises.size() <= 15 &&
+        data.exerciseIds is list && data.exerciseIds.size() == data.exercises.size() &&
+        data.totalVolume is number && data.totalVolume >= 0;
+    }
+    match /users/{uid}/routines/{id} {
+      allow read, delete: if owner(uid);
+      allow create, update: if owner(uid) && validRoutine(id);
+    }
+    match /users/{uid}/workouts/{id} {
+      allow read, delete: if owner(uid);
+      allow create, update: if owner(uid) && validWorkout(id);
+    }
+    match /users/{uid}/lastPerformance/{exerciseId} {
+      allow read: if owner(uid);
+      // Updated by trusted backend code once the logger is implemented.
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

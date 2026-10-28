@@ -1,0 +1,11 @@
+{
+  "name": "gymgym-firebase-tests",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test firestore.rules.test.js" },
+  "overrides": { "@grpc/grpc-js": "^1.13.6" },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0"
+  }
+}

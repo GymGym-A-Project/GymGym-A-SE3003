@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymgym_a/app.dart';
 import 'package:gymgym_a/data/exercise_catalog.dart';
+import 'package:gymgym_a/data/auth/auth_providers.dart';
+import 'package:gymgym_a/data/auth/auth_repository.dart';
+import 'package:gymgym_a/data/auth/fake_auth_repository.dart';
 
 import 'helpers/fake_exercises.dart';
 
@@ -11,6 +14,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          authRepositoryProvider.overrideWithValue(
+            FakeAuthRepository(
+              user: const AuthUser(id: 'test-user', email: 'test@example.com'),
+            ),
+          ),
           exerciseCatalogProvider.overrideWith((ref) async => fakeExercises),
         ],
         child: const GymGymApp(),
