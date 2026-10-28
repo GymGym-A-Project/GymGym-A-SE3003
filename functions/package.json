@@ -1,0 +1,17 @@
+{
+  "name": "gymgym-a-functions",
+  "private": true,
+  "description": "Week 3 spike: Gemini proxy for the plateau analyzer",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions --project demo-gymgym",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  }
+}
