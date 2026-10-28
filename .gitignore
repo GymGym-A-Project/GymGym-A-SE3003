@@ -4,6 +4,7 @@ __pycache__/
 .env
 .vscode/functions/.env
 functions/node_modules/
+test/firebase/node_modules/
 *.log
 .vscode/
 # Flutter / Dart
@@ -39,3 +40,6 @@ GeneratedPluginRegistrant.java
 
 # Local spike benchmarks / experiments
 spike/
+
+firestore-debug.log
+*-debug.log

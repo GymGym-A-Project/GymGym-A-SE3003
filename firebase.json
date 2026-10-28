@@ -1,15 +1,1 @@
-{
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": ["node_modules", ".git", "*.local"]
-    }
-  ],
-  "emulators": {
-    "functions": { "port": 5001 },
-    "firestore": { "port": 8080 },
-    "ui": { "enabled": false },
-    "singleProjectMode": true
-  }
-}
+{"functions":[{"source":"functions","codebase":"default","ignore":["node_modules",".git","*.local"]}],"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"emulators":{"auth":{"port":9099},"functions":{"port":5001},"firestore":{"port":8080},"ui":{"enabled":false},"singleProjectMode":true},"flutter":{"platforms":{"android":{"default":{"projectId":"gymgym-a","appId":"1:45354610270:android:baa504b11f3a2d88be4ecf","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"gymgym-a","configurations":{"android":"1:45354610270:android:baa504b11f3a2d88be4ecf"}}}}}}

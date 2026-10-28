@@ -19,6 +19,24 @@ jobs:
           cache: true
 
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test
       - run: flutter analyze --fatal-infos
       - run: flutter test
+
+  firestore-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: test/firebase/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+        working-directory: test/firebase
+      - run: npx --yes firebase-tools@14.20.0 emulators:exec --only firestore --project demo-gymgym "node --test test/firebase/firestore.rules.test.js"
