@@ -16,13 +16,23 @@ build/
 /android/app/profile
 /android/app/release
 
-# Firebase functions
+# Firebase & Emulator logs
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
 functions/.env
 functions/node_modules/
 
-# Exercise media (© Gym visual) is not redistributed in the public repo;
-# fetch it with: python scripts/clean_dataset.py
-assets/gifs/*
-!assets/gifs/.gitkeep
-assets/thumbs/*
-!assets/thumbs/.gitkeep
+# Android / Gradle local files & artifacts
+.gradle/
+**/android/.gradle/
+local.properties
+**/android/local.properties
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/gradlew
+**/android/gradlew.bat
+GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.java
+
+# Local spike benchmarks / experiments
+spike/
