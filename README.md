@@ -70,7 +70,7 @@ python scripts/clean_dataset.py              # regenerate JSON and re-verify 180
 - [Definition of Done (`docs/definition-of-done.md`)](docs/definition-of-done.md): the six criteria every Work Package and PR must meet, and how each one is verified.
 - [QA Test Checklist (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md): test cases for each acceptance criterion in `WP-01`–`WP-08`, with automation status, the regression policy, the defect severity scale, how to run tests, and the M3 test-run log.
 
-CI runs `dart format`, `flutter analyze --fatal-infos` and `flutter test` on every PR. The Firestore rules, Cloud Functions and integration tests are run locally; see the checklist for the commands.
+CI runs `dart format`, `flutter analyze --fatal-infos`, `flutter test` and the Firestore rules tests on every PR. The Cloud Functions tests and the emulator integration test are run locally; see the checklist for the commands.
 
 ## Project Documentation
 

@@ -28,7 +28,7 @@ This checklist turns each M2 acceptance criterion into one or more test cases. E
 
 **Test types:** `unit` · `widget` · `integration` (runs on an emulator against the Firebase Emulator Suite) · `Firestore rules` · `manual-emulator` · `performance`.
 
-**CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs only `dart format`, `flutter analyze --fatal-infos` and `flutter test`. The Firestore rules tests, the Cloud Functions tests and the integration test have to be run by hand (see [How to run tests](#how-to-run-tests)).
+**CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) has two jobs: `analyze-and-test` (`dart format`, `flutter analyze --fatal-infos`, `flutter test`) and `firestore-rules` (the Firestore rules tests against the Firestore emulator). The Cloud Functions tests and the integration test are **not** in CI and have to be run by hand (see [How to run tests](#how-to-run-tests)).
 
 ## Coverage summary
 
@@ -44,7 +44,7 @@ This checklist turns each M2 acceptance criterion into one or more test cases. E
 | WP-08 | 4 | 3 | 0 | 0 | 3 |
 | **Total** | | **52** | **26** | **4** | **22** |
 
-All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 passing and `npm test` in `functions/` gave 5/5 passing. The Firestore rules tests and the integration test were **not** re-run that day because the Firebase CLI was not installed on the reviewer's machine. Their status is based on PR #40 and must be confirmed in the first M3 test run.
+All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 passing, the Firestore rules tests gave 4/4 passing (locally and in the CI `firestore-rules` job), and `npm test` in `functions/` gave 5/5 passing. The integration test was **not** re-run because it needs a running Android emulator. Its status is based on PR #40 and must be confirmed in the first M3 test run.
 
 ---
 
@@ -74,7 +74,7 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | QA-WP02-05 | Logout returns to the sign-in screen, and protected routes stay blocked afterwards. | widget, integration | as QA-WP02-01 | `auth_flow_test.dart` (`…logout guards routes`), `firebase_auth_test.dart` | Automated ✅ |
 | QA-WP02-06 | Clear error messages for invalid credentials: wrong password, invalid email, mismatched passwords, duplicate account. | unit, widget | `flutter test test/data/auth_repository_test.dart test/features/auth/` | `auth_flow_test.dart` (`…rejects wrong password`, `invalid input and mismatched passwords…`), `test/data/auth_repository_test.dart` (`fake rejects invalid credentials…`) | Automated ✅ |
 | QA-WP02-07 | Error messages from the **real** Firebase Auth are mapped to readable text: wrong password, email already in use, weak password, no network. | manual-emulator | Run against the Auth emulator (`--dart-define=USE_FIREBASE_EMULATORS=true`) and trigger each case. Then enable airplane mode and try to sign in. No raw `FirebaseAuthException` codes may appear. | — (automated tests use `FakeAuthRepository`) | Manual |
-| QA-WP02-08 | User data is isolated per UID: signed-out users and other UIDs cannot read, write or delete `routines`, `workouts` or `lastPerformance`, and unknown collections are denied. | Firestore rules | Firestore rules tests (see [How to run tests](#how-to-run-tests)) | `test/firebase/firestore.rules.test.js` (`signed-out and other users cannot access private data`, `workout timestamps and user isolation are enforced`) | Automated ✅ (local) |
+| QA-WP02-08 | User data is isolated per UID: signed-out users and other UIDs cannot read, write or delete `routines`, `workouts` or `lastPerformance`, and unknown collections are denied. | Firestore rules | Firestore rules tests (see [How to run tests](#how-to-run-tests)) | `test/firebase/firestore.rules.test.js` (`signed-out and other users cannot access private data`, `workout timestamps and user isolation are enforced`) | Automated ✅ |
 
 ## WP-03 — Exercise library (Sprint 1)
 
@@ -93,7 +93,7 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | Test ID | Criterion | Type | How to run / perform | Covering test | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | QA-WP04-01 | The routine domain model accepts 1 and 15 exercises and rejects 0 and 16; it also rejects blank names and non-positive target sets. | unit | `flutter test test/data/routine_test.dart` | `test/data/routine_test.dart` | Automated ✅ |
-| QA-WP04-02 | Firestore rules enforce 1–15 items and valid routine fields. | Firestore rules | Firestore rules tests | `firestore.rules.test.js` (`routine validation rejects malformed values and accepts 15 items`, `owners can create, read, update and delete their routines`) | Automated ✅ (local) |
+| QA-WP04-02 | Firestore rules enforce 1–15 items and valid routine fields. | Firestore rules | Firestore rules tests | `firestore.rules.test.js` (`routine validation rejects malformed values and accepts 15 items`, `owners can create, read, update and delete their routines`) | Automated ✅ |
 | QA-WP04-03 | The repository contract covers create, get, update, delete and reorder, with live updates to listeners. | unit | `flutter test test/data/fake_routine_repository_test.dart` | `test/data/fake_routine_repository_test.dart` | Automated ✅ |
 | QA-WP04-04 | User can create, view, edit and delete a routine from the UI. | widget, manual-emulator | — | — (`RoutinesScreen` is a placeholder) | Not yet implemented — Sprint 1 |
 | QA-WP04-05 | User can reorder routines and the exercises inside a routine from the UI. | widget, manual-emulator | — | — | Not yet implemented — Sprint 1 |
@@ -105,7 +105,7 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | Test ID | Criterion | Type | How to run / perform | Covering test | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | QA-WP05-01 | A set accepts finite `weightKg >= 0` (bodyweight = 0) and integer `reps > 0`; session total volume is derived, never trusted from JSON. | unit | `flutter test test/data/workout_session_test.dart` | `test/data/workout_session_test.dart` | Automated ✅ |
-| QA-WP05-02 | A session has 1–15 distinct exercises, and its finish time is not before its start time (model and rules). | unit, Firestore rules | as above, plus the Firestore rules tests | `workout_session_test.dart` (`session validates time range and exercise count and ids`), `firestore.rules.test.js` (`workout timestamps…`) | Automated ✅ (rules part local) |
+| QA-WP05-02 | A session has 1–15 distinct exercises, and its finish time is not before its start time (model and rules). | unit, Firestore rules | as above, plus the Firestore rules tests | `workout_session_test.dart` (`session validates time range and exercise count and ids`), `firestore.rules.test.js` (`workout timestamps…`) | Automated ✅ |
 | QA-WP05-03 | Ghost values from the last **completed** session are pre-filled faintly in **< 200 ms** after starting a workout. | widget, performance | — | — (Week 3 spike measured a 10.5 ms median cache read in `spike/firestore_bench`; this is not an app test) | Not yet implemented — Sprint 2 |
 | QA-WP05-04 | User can add and remove exercises during an active workout. | widget | — | — (`LoggerScreen` is a placeholder) | Not yet implemented — Sprint 2 |
 | QA-WP05-05 | On finish, a timestamped session is saved and a summary of total volume and set count is shown. | widget, integration | — | — | Not yet implemented — Sprint 2 |
@@ -190,16 +190,16 @@ These commands come from [`.github/workflows/ci.yml`](../.github/workflows/ci.ym
 
 ```bash
 flutter pub get
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test integration_test
 flutter analyze --fatal-infos
 flutter test
 ```
 
-**2. Firestore rules tests** (`test/firebase/`; needs the Firebase CLI and Java):
+**2. Firestore rules tests** (`test/firebase/`; needs Node.js and Java; the same command as the CI `firestore-rules` job):
 
 ```bash
 cd test/firebase && npm ci && cd ../..
-firebase emulators:exec --only firestore --project demo-gymgym "node --test test/firebase/firestore.rules.test.js"
+npx --yes firebase-tools@14.20.0 emulators:exec --only firestore --project demo-gymgym "node --test test/firebase/firestore.rules.test.js"
 ```
 
 **3. Integration test with the Firebase emulators** (needs a running Android emulator; it refuses to run against a production project):
@@ -222,6 +222,6 @@ Add one row per regression or acceptance run. "Results" lists pass/total per sui
 
 | Date | Build / commit | Tester | Scope | Results | Defects (severity) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 28.10.2026 | `docs/qa-checklist-dod` (based on `4d44745`) | Berat Kaan Akcan | Suites 1 & 4 (baseline, before M3) | 1: 53/53 · 4: 5/5 · 2, 3, M: not run (no Firebase CLI) | — |
+| 28.10.2026 | `docs/qa-checklist-dod` (based on `4d44745`) | Berat Kaan Akcan | Suites 1, 2 & 4 (baseline, before M3) | 1: 53/53 · 2: 4/4 · 4: 5/5 · 3, M: not run (no Android emulator) | — |
 | | | | | | |
 | | | | | | |
