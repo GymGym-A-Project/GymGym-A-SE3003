@@ -4,6 +4,9 @@
 
 GymGym-A is a cross-platform mobile application built for amateur gym-goers to track their workouts with low friction, apply progressive overload using previous-session **ghost values**, and identify training plateaus via a deterministic 30-day rule engine paired with an on-demand AI explanation layer.
 
+- **Repository:** [https://github.com/GymGym-A-Project/GymGym-A-SE3003](https://github.com/GymGym-A-Project/GymGym-A-SE3003)
+- **Project Board:** [https://github.com/users/se-230717041/projects/1/views/1?layout_template=board](https://github.com/users/se-230717041/projects/1/views/1?layout_template=board)
+
 ## Team GymGym-A
 
 | Student ID | Name | Role |
@@ -15,10 +18,10 @@ GymGym-A is a cross-platform mobile application built for amateur gym-goers to t
 
 ## Tech Stack
 
-- **Mobile Client:** Flutter (Dart 3), Riverpod, `go_router`
+- **Mobile Client:** Flutter (`3.47.5` stable, Dart 3), Riverpod (`flutter_riverpod`), `go_router`
 - **Authentication & Storage:** Firebase Authentication, Cloud Firestore (offline persistence enabled)
 - **Plateau Analyzer:** Local deterministic 30-day rule engine + Firebase Cloud Function proxy for Google Gemini Flash (152-ID whitelist validated, 4s timeout fallback)
-- **Exercise Catalog:** Bundled static JSON subset (`assets/data/exercises.json`, `152` verified exercises across 6 primary muscle groups)
+- **Exercise Catalog:** Bundled static JSON subset (`assets/data/exercises.json`, `152` verified exercises across 6 primary muscle groups with `180x180` GIFs and thumbnails)
 
 ## Technical Decisions
 
@@ -26,35 +29,48 @@ GymGym-A is a cross-platform mobile application built for amateur gym-goers to t
 | :--- | :--- |
 | Flutter version | `3.47.5` stable, pinned in `.fvmrc` and CI |
 | State management | Riverpod (`flutter_riverpod`) |
-| Navigation | `go_router` with a signed-out redirect guard (WP-02) |
+| Navigation | `go_router` with a signed-out redirect guard (`WP-02`) |
 | Backend | Firebase Auth + Cloud Firestore (offline persistence on) |
-| Exercise library | Bundled JSON + `180x180` media, not stored in Firestore |
-| Lint | `flutter_lints`; CI runs `flutter analyze --fatal-infos` + `flutter test` |
+| Exercise library | Statically bundled `152`-exercise JSON + `180x180` media (`assets/gifs/`, `assets/thumbs/`) |
+| Lint & CI | `flutter_lints`; GitHub Actions runs `dart format`, `flutter analyze --fatal-infos`, and `flutter test` |
 
 ## Getting Started
 
+All `152` curated exercise records (`assets/data/exercises.json`) and their `180x180` media assets (`assets/gifs/` and `assets/thumbs/`) are bundled in the repository, so the application runs offline out of the box:
+
 ```bash
 flutter pub get
-python scripts/clean_dataset.py   # downloads exercise media (not committed)
 flutter run
 ```
 
-## Dataset & Attribution
-
-The curated exercise catalog (`assets/data/exercises.json`) is generated from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (pinned commit `7455efae41b330c265e7cd4b78dfa848e7ce5ebd`) using `scripts/clean_dataset.py`:
+To run with the local Firebase Auth & Firestore Emulator Suite during development:
 
 ```bash
-python scripts/clean_dataset.py --no-media
+firebase emulators:start --only auth,firestore --project demo-gymgym
+flutter run --dart-define=USE_FIREBASE_EMULATORS=true
 ```
 
-The `180x180` GIFs and thumbnails are **not committed** (the repository is public and the media is © Gym visual). After cloning, download them into `assets/gifs/` and `assets/thumbs/` before running the app:
+See [docs/firebase-auth-and-domain.md](docs/firebase-auth-and-domain.md) for full emulator and test instructions.
+
+## Dataset & Attribution
+
+The curated exercise catalog (`assets/data/exercises.json`) and `180x180` media subset are derived from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (pinned commit `7455efae41b330c265e7cd4b78dfa848e7ce5ebd`) using `scripts/clean_dataset.py`. To regenerate the JSON catalog or re-verify the media assets from source:
 
 ```bash
-python scripts/clean_dataset.py
+python scripts/clean_dataset.py --no-media   # regenerate JSON only
+python scripts/clean_dataset.py              # regenerate JSON and re-verify 180x180 media
 ```
 
 - **Exercise Data & Code:** Licensed under the **MIT License**.
-- **Visual Media (`180x180` GIFs & Thumbnails):** **© Gym visual** ([https://gymvisual.com/](https://gymvisual.com/)). Used strictly for academic course purposes at original `180x180` resolution with mandatory attribution displayed in the application UI and documentation.
+- **Visual Media (`180x180` GIFs & Thumbnails):** **© Gym visual** ([https://gymvisual.com/](https://gymvisual.com/)). Bundled strictly for non-commercial academic course evaluation (`SE3003`) at unmodified `180x180` resolution, with mandatory `"© Gym visual"` attribution displayed on the Exercise Library screen, the Exercise Detail view, and this README (`R-01` & `A-03`).
 - **Advisory Notice:** All plateau analysis outputs are for informational workout tracking only and do not constitute medical or professional coaching advice.
 
-See [docs/dataset-selection.md](docs/dataset-selection.md) for the complete 152-exercise breakdown and JSON schema.
+## Project Documentation
+
+- [Dataset Selection & Schema (`docs/dataset-selection.md`)](docs/dataset-selection.md)
+- [Week 3 Competitor Review: Strong vs. Hevy (`docs/competitor-review.md`)](docs/competitor-review.md)
+- [Week 3 Technical Spike Summary (`docs/spike-summary.md`)](docs/spike-summary.md)
+- [Firebase, Authentication & Domain Contract (`docs/firebase-auth-and-domain.md`)](docs/firebase-auth-and-domain.md)
+- [Planning Poker Estimation Log (`docs/planning-poker-estimates.md`)](docs/planning-poker-estimates.md)
+- [QA Test Checklist & DoD Verification (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md)
+- [Submitted Milestone Reports (`docs/reports/`)](docs/reports/)
