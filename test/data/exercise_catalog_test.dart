@@ -83,8 +83,11 @@ void main() {
         : 'media not downloaded; run python scripts/clean_dataset.py',
   );
 
-  test('loads within 500 ms', () {
-    // Wide threshold: load time depends on the machine.
+  test('loads within 500 ms (CI regression guard)', () {
+    // The M2 baseline target is < 100 ms on an emulator/device in profile
+    // mode (QA-WP01-06 in docs/qa-test-checklist.md). This test VM runs JIT
+    // with a cold asset bundle and measured 56-132 ms locally, so asserting
+    // 100 ms here would be flaky; 500 ms only catches large regressions.
     expect(loadTime, lessThan(const Duration(milliseconds: 500)));
   });
 

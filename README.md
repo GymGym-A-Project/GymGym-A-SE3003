@@ -65,6 +65,13 @@ python scripts/clean_dataset.py              # regenerate JSON and re-verify 180
 - **Visual Media (`180x180` GIFs & Thumbnails):** **© Gym visual** ([https://gymvisual.com/](https://gymvisual.com/)). Bundled strictly for non-commercial academic course evaluation (`SE3003`) at unmodified `180x180` resolution, with mandatory `"© Gym visual"` attribution displayed on the Exercise Library screen, the Exercise Detail view, and this README (`R-01` & `A-03`).
 - **Advisory Notice:** All plateau analysis outputs are for informational workout tracking only and do not constitute medical or professional coaching advice.
 
+## Quality & Testing
+
+- [Definition of Done (`docs/definition-of-done.md`)](docs/definition-of-done.md): the six criteria every Work Package and PR must meet, and how each one is verified.
+- [QA Test Checklist (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md): test cases for each acceptance criterion in `WP-01`–`WP-08`, with automation status, the regression policy, the defect severity scale, how to run tests, and the M3 test-run log.
+
+CI runs `dart format`, `flutter analyze --fatal-infos`, `flutter test` and the Firestore rules tests on every PR. The Cloud Functions tests and the emulator integration test are run locally; see the checklist for the commands.
+
 ## Project Documentation
 
 - [Dataset Selection & Schema (`docs/dataset-selection.md`)](docs/dataset-selection.md)
@@ -72,5 +79,6 @@ python scripts/clean_dataset.py              # regenerate JSON and re-verify 180
 - [Week 3 Technical Spike Summary (`docs/spike-summary.md`)](docs/spike-summary.md)
 - [Firebase, Authentication & Domain Contract (`docs/firebase-auth-and-domain.md`)](docs/firebase-auth-and-domain.md)
 - [Planning Poker Estimation Log (`docs/planning-poker-estimates.md`)](docs/planning-poker-estimates.md)
-- [QA Test Checklist & DoD Verification (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md)
+- [Definition of Done (`docs/definition-of-done.md`)](docs/definition-of-done.md)
+- [QA Test Checklist (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md)
 - [Submitted Milestone Reports (`docs/reports/`)](docs/reports/)
