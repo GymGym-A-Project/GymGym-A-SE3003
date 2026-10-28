@@ -5,3 +5,37 @@ __pycache__/
 .vscode/functions/.env
 functions/node_modules/
 *.log
+.vscode/
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+*.iml
+.idea/
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase & Emulator logs
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+functions/.env
+functions/node_modules/
+
+# Android / Gradle local files & artifacts
+.gradle/
+**/android/.gradle/
+local.properties
+**/android/local.properties
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/gradlew
+**/android/gradlew.bat
+GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.java
+
+# Local spike benchmarks / experiments
+spike/
