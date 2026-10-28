@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/analyzer/analyzer_screen.dart';
 import '../features/auth/auth_screen.dart';
+import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/exercises_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/logger/logger_screen.dart';
@@ -16,6 +17,8 @@ abstract final class AppRoutes {
   static const logger = '/logger';
   static const history = '/history';
   static const analyzer = '/analyzer';
+
+  static String exerciseDetail(String id) => '$exercises/$id';
 }
 
 // The signed-out redirect guard is added with WP-02.
@@ -29,7 +32,17 @@ final appRouter = GoRouter(
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
-        _branch(AppRoutes.exercises, const ExercisesScreen()),
+        _branch(
+          AppRoutes.exercises,
+          const ExercisesScreen(),
+          routes: [
+            GoRoute(
+              path: ':id',
+              builder: (context, state) =>
+                  ExerciseDetailScreen(id: state.pathParameters['id']!),
+            ),
+          ],
+        ),
         _branch(AppRoutes.routines, const RoutinesScreen()),
         _branch(AppRoutes.logger, const LoggerScreen()),
         _branch(AppRoutes.history, const HistoryScreen()),
@@ -39,8 +52,14 @@ final appRouter = GoRouter(
   ],
 );
 
-StatefulShellBranch _branch(String path, Widget screen) {
+StatefulShellBranch _branch(
+  String path,
+  Widget screen, {
+  List<RouteBase> routes = const [],
+}) {
   return StatefulShellBranch(
-    routes: [GoRoute(path: path, builder: (context, state) => screen)],
+    routes: [
+      GoRoute(path: path, builder: (context, state) => screen, routes: routes),
+    ],
   );
 }

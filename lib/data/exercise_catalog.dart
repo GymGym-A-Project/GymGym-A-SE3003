@@ -30,3 +30,10 @@ class ExerciseCatalog {
 final exerciseCatalogProvider = FutureProvider<List<Exercise>>(
   (ref) => const ExerciseCatalog().load(),
 );
+
+/// The catalog entry with [id], or `null` when no exercise has that id.
+final exerciseByIdProvider = Provider.family<AsyncValue<Exercise?>, String>(
+  (ref, id) => ref
+      .watch(exerciseCatalogProvider)
+      .whenData((all) => all.where((e) => e.id == id).firstOrNull),
+);

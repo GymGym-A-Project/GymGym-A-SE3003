@@ -10,19 +10,21 @@ Exercise fakeExercise({
   required String primaryMuscle,
   String targetMuscle = 'target',
   String equipment = 'barbell',
+  List<String> secondaryMuscles = const [],
+  Map<String, List<String>> instructionSteps = const {'en': []},
 }) {
   return Exercise(
     id: id,
     name: name,
     primaryMuscle: primaryMuscle,
     targetMuscle: targetMuscle,
-    secondaryMuscles: const [],
+    secondaryMuscles: secondaryMuscles,
     equipment: equipment,
     equipmentSource: equipment,
     movementType: 'compound',
     splitTags: const [],
     instructions: const {'en': ''},
-    instructionSteps: const {'en': []},
+    instructionSteps: instructionSteps,
     gifPath: 'test/missing/$id.gif',
     thumbPath: 'test/missing/$id.jpg',
     mediaId: id,
@@ -31,7 +33,17 @@ Exercise fakeExercise({
 }
 
 final fakeExercises = [
-  fakeExercise(id: '1', name: 'Bench Press', primaryMuscle: 'chest'),
+  fakeExercise(
+    id: '1',
+    name: 'Bench Press',
+    primaryMuscle: 'chest',
+    targetMuscle: 'pectorals',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    instructionSteps: {
+      'en': ['Lie on the bench.', 'Press the bar up.'],
+      'tr': ['Banka uzanın.', 'Barı yukarı itin.'],
+    },
+  ),
   fakeExercise(
     id: '2',
     name: 'Lat Pulldown',

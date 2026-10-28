@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router.dart';
+import '../../core/text_format.dart';
 import '../../data/exercise_catalog.dart';
 import '../../data/models/exercise.dart';
 import 'exercise_filter.dart';
@@ -115,12 +118,10 @@ class _ExerciseTile extends StatelessWidget {
       ),
       title: Text(exercise.name),
       subtitle: Text(
-        '${_capitalize(exercise.primaryMuscle)} · '
-        '${_capitalize(exercise.equipment)}',
+        '${capitalize(exercise.primaryMuscle)} · '
+        '${capitalize(exercise.equipment)}',
       ),
-      onTap: () {
-        // TODO(#16): open detail view
-      },
+      onTap: () => context.go(AppRoutes.exerciseDetail(exercise.id)),
     );
   }
 }
@@ -138,6 +139,3 @@ class _Attribution extends StatelessWidget {
     );
   }
 }
-
-String _capitalize(String value) =>
-    value.isEmpty ? value : value[0].toUpperCase() + value.substring(1);
