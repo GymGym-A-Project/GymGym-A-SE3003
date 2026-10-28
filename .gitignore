@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 .env
+.vscode/functions/.env
+functions/node_modules/
+*.log
 .vscode/
 # Flutter / Dart
 .dart_tool/
