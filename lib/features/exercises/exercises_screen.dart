@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
-import '../../core/text_format.dart';
 import '../../data/exercise_catalog.dart';
 import '../../data/models/exercise.dart';
 import 'exercise_filter.dart';
+import 'exercise_widgets.dart';
 
 class ExercisesScreen extends ConsumerWidget {
   const ExercisesScreen({super.key});
@@ -23,7 +23,7 @@ class ExercisesScreen extends ConsumerWidget {
             const _MuscleChips(),
             const Expanded(child: _ExerciseList()),
             if (exercises.isNotEmpty)
-              _Attribution(text: exercises.first.attribution),
+              ExerciseAttribution(exercises.first.attribution),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -58,22 +58,9 @@ class _MuscleChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(selectedMuscleProvider);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        spacing: 8,
-        children: [
-          for (final muscle in MuscleFilter.values)
-            ChoiceChip(
-              label: Text(muscle.label),
-              selected: muscle == selected,
-              onSelected: (_) =>
-                  ref.read(selectedMuscleProvider.notifier).select(muscle),
-            ),
-        ],
-      ),
+    return MuscleFilterChips(
+      selected: ref.watch(selectedMuscleProvider),
+      onSelected: ref.read(selectedMuscleProvider.notifier).select,
     );
   }
 }
@@ -102,40 +89,10 @@ class _ExerciseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          exercise.thumbPath,
-          width: 56,
-          height: 56,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const SizedBox(
-            width: 56,
-            height: 56,
-            child: Icon(Icons.fitness_center),
-          ),
-        ),
-      ),
+      leading: ExerciseThumbnail(exercise.thumbPath),
       title: Text(exercise.name),
-      subtitle: Text(
-        '${capitalize(exercise.primaryMuscle)} · '
-        '${capitalize(exercise.equipment)}',
-      ),
+      subtitle: Text(exerciseSummary(exercise)),
       onTap: () => context.go(AppRoutes.exerciseDetail(exercise.id)),
-    );
-  }
-}
-
-class _Attribution extends StatelessWidget {
-  const _Attribution({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Text(text, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }
