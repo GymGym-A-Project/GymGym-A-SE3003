@@ -1,0 +1,107 @@
+import 'dart:math';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../data/models/exercise.dart';
+import '../../data/models/routine.dart';
+import '../../data/models/routine_item.dart';
+
+const maxRoutineExercises = 15;
+const defaultTargetSets = 3;
+const minTargetSets = 1;
+
+/// A selected exercise and its planned set count.
+class RoutineDraftItem {
+  const RoutineDraftItem(this.exercise, {this.targetSets = defaultTargetSets});
+
+  final Exercise exercise;
+  final int targetSets;
+}
+
+/// The unsaved routine on the create screen.
+class RoutineDraft {
+  const RoutineDraft({this.name = '', this.items = const []});
+
+  final String name;
+  final List<RoutineDraftItem> items;
+
+  bool get isFull => items.length >= maxRoutineExercises;
+
+  bool get canSave => name.trim().isNotEmpty && items.isNotEmpty;
+
+  bool contains(String exerciseId) =>
+      items.any((item) => item.exercise.id == exerciseId);
+
+  /// Throws [ArgumentError] when the draft breaks a [Routine] rule.
+  Routine toRoutine({
+    required String id,
+    required int order,
+    required DateTime updatedAt,
+  }) {
+    return Routine(
+      id: id,
+      name: name.trim(),
+      order: order,
+      items: [
+        for (final item in items)
+          RoutineItem(
+            exerciseId: item.exercise.id,
+            targetSets: item.targetSets,
+          ),
+      ],
+      source: 'custom',
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+class RoutineDraftNotifier extends Notifier<RoutineDraft> {
+  @override
+  RoutineDraft build() => const RoutineDraft();
+
+  void rename(String name) =>
+      state = RoutineDraft(name: name, items: state.items);
+
+  /// Adds [exercise] once. Returns false when the routine is full; an exercise
+  /// that is already selected stays selected, because a workout session needs
+  /// distinct exercises.
+  bool add(Exercise exercise) {
+    if (state.contains(exercise.id)) return true;
+    if (state.isFull) return false;
+    _setItems([...state.items, RoutineDraftItem(exercise)]);
+    return true;
+  }
+
+  void remove(String exerciseId) => _setItems([
+    for (final item in state.items)
+      if (item.exercise.id != exerciseId) item,
+  ]);
+
+  /// Changes the target sets of [exerciseId] by [delta], never below the minimum.
+  void changeTargetSets(String exerciseId, int delta) => _setItems([
+    for (final item in state.items)
+      if (item.exercise.id == exerciseId)
+        RoutineDraftItem(
+          item.exercise,
+          targetSets: max(minTargetSets, item.targetSets + delta),
+        )
+      else
+        item,
+  ]);
+
+  void _setItems(List<RoutineDraftItem> items) =>
+      state = RoutineDraft(name: state.name, items: List.unmodifiable(items));
+}
+
+/// Lives only while the create screen is open.
+final routineDraftProvider =
+    NotifierProvider.autoDispose<RoutineDraftNotifier, RoutineDraft>(
+      RoutineDraftNotifier.new,
+    );
+
+final _random = Random();
+
+/// Time-based id with a random suffix, so that two ids never collide in
+/// practice even when created in the same microsecond.
+String newRoutineId() =>
+    '${DateTime.now().microsecondsSinceEpoch}-${_random.nextInt(1 << 32)}';
