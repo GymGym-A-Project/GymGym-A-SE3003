@@ -9,6 +9,8 @@ import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/exercises_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/logger/logger_screen.dart';
+import '../features/routines/routine_create_screen.dart';
+import '../features/routines/routine_detail_screen.dart';
 import '../features/routines/routines_screen.dart';
 import 'widgets/app_shell.dart';
 
@@ -16,11 +18,13 @@ abstract final class AppRoutes {
   static const auth = '/auth';
   static const exercises = '/exercises';
   static const routines = '/routines';
+  static const routineNew = '$routines/new';
   static const logger = '/logger';
   static const history = '/history';
   static const analyzer = '/analyzer';
 
   static String exerciseDetail(String id) => '$exercises/$id';
+  static String routineDetail(String id) => '$routines/$id';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -77,7 +81,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          _branch(AppRoutes.routines, const RoutinesScreen()),
+          _branch(
+            AppRoutes.routines,
+            const RoutinesScreen(),
+            routes: [
+              // Must stay above ':id', which would also match 'new'.
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => const RoutineCreateScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) =>
+                    RoutineDetailScreen(id: state.pathParameters['id']!),
+              ),
+            ],
+          ),
           _branch(AppRoutes.logger, const LoggerScreen()),
           _branch(AppRoutes.history, const HistoryScreen()),
           _branch(AppRoutes.analyzer, const AnalyzerScreen()),
