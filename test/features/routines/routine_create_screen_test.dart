@@ -267,4 +267,36 @@ void main() {
     expect(find.textContaining('Very Long'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a new routine goes last even after a deletion left a gap', (
+    tester,
+  ) async {
+    final repository = FakeRoutineRepository(
+      routines: [
+        for (final (id, order) in [('b', 1), ('c', 2)])
+          Routine(
+            id: id,
+            name: 'Routine $id',
+            order: order,
+            items: [RoutineItem(exerciseId: '3', targetSets: 1)],
+            source: 'custom',
+            updatedAt: DateTime.utc(2026, 11, 1),
+          ),
+      ],
+    );
+    await pumpRoutineApp(
+      tester,
+      location: AppRoutes.routineNew,
+      repository: repository,
+    );
+
+    await tester.enterText(_nameField, 'Newest');
+    await _pick(tester, ['Bench Press']);
+    await tester.tap(_save);
+    await tester.pumpAndSettle();
+
+    final all = await repository.watch().first;
+    expect(all.last.name, 'Newest');
+    expect(all.last.order, 3);
+  });
 }
