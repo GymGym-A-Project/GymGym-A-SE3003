@@ -25,6 +25,7 @@ abstract final class AppRoutes {
 
   static String exerciseDetail(String id) => '$exercises/$id';
   static String routineDetail(String id) => '$routines/$id';
+  static String routineEdit(String id) => '$routines/$id/edit';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -94,6 +95,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 builder: (context, state) =>
                     RoutineDetailScreen(id: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) =>
+                        RoutineEditScreen(id: state.pathParameters['id']!),
+                  ),
+                ],
               ),
             ],
           ),

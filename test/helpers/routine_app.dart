@@ -52,3 +52,16 @@ Future<void> pumpRoutineApp(
   container.read(appRouterProvider).go(location);
   await tester.pumpAndSettle();
 }
+
+/// Drags the handle with [key] by [dy] and drops it.
+Future<void> dragHandle(WidgetTester tester, String key, double dy) async {
+  final handle = find.byKey(ValueKey(key));
+  final gesture = await tester.startGesture(tester.getCenter(handle));
+  await tester.pump();
+  for (var i = 0; i < 4; i++) {
+    await gesture.moveBy(Offset(0, dy / 4));
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  await gesture.up();
+  await tester.pumpAndSettle();
+}

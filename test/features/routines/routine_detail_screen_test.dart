@@ -4,6 +4,9 @@ import 'package:gymgym_a/core/router.dart';
 import 'package:gymgym_a/data/models/routine.dart';
 import 'package:gymgym_a/data/models/routine_item.dart';
 import 'package:gymgym_a/data/repositories/fake_routine_repository.dart';
+import 'package:gymgym_a/features/routines/routine_create_screen.dart';
+import 'package:gymgym_a/features/routines/routine_detail_screen.dart';
+import 'package:gymgym_a/features/routines/routines_screen.dart';
 
 import '../../helpers/fake_exercises.dart';
 import '../../helpers/routine_app.dart';
@@ -74,5 +77,61 @@ void main() {
 
     expect(find.text('Routine not found'), findsOneWidget);
     expect(find.text(fakeAttribution), findsNothing);
+    expect(find.byTooltip('Edit routine'), findsNothing);
+    expect(find.byTooltip('Delete routine'), findsNothing);
+  });
+
+  testWidgets('the edit action opens the edit screen', (tester) async {
+    await _pumpDetail(tester, [RoutineItem(exerciseId: '1', targetSets: 3)]);
+
+    await tester.tap(find.byTooltip('Edit routine'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RoutineEditScreen), findsOneWidget);
+  });
+
+  group('delete', () {
+    late FakeRoutineRepository repository;
+
+    Future<void> openDialog(WidgetTester tester) async {
+      repository = FakeRoutineRepository(
+        routines: [
+          _routine([RoutineItem(exerciseId: '1', targetSets: 3)]),
+        ],
+      );
+      await pumpRoutineApp(
+        tester,
+        location: AppRoutes.routineDetail('r1'),
+        repository: repository,
+      );
+      await tester.tap(find.byTooltip('Delete routine'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('cancel keeps the routine and stays on the view', (
+      tester,
+    ) async {
+      await openDialog(tester);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(await repository.get('r1'), isNotNull);
+      expect(find.byType(RoutineDetailScreen), findsOneWidget);
+    });
+
+    testWidgets('confirm removes the routine and goes back to the list', (
+      tester,
+    ) async {
+      await openDialog(tester);
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(await repository.get('r1'), isNull);
+      expect(find.byType(RoutineDetailScreen), findsNothing);
+      expect(find.byType(RoutinesScreen), findsOneWidget);
+      expect(find.text('No routines yet'), findsOneWidget);
+    });
   });
 }

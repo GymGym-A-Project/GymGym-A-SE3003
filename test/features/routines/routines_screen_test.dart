@@ -69,4 +69,41 @@ void main() {
 
     expect(find.byType(RoutineDetailScreen), findsOneWidget);
   });
+
+  testWidgets('dragging a routine updates its order and the display order', (
+    tester,
+  ) async {
+    final repository = FakeRoutineRepository(
+      routines: [
+        _routine('a', 'Push', 0, 1),
+        _routine('b', 'Pull', 1, 1),
+        _routine('c', 'Legs', 2, 1),
+      ],
+    );
+    await pumpRoutineApp(tester, repository: repository);
+
+    await dragHandle(tester, 'drag-a', 160);
+
+    final saved = await repository.watch().first;
+    expect(saved.map((r) => r.id), ['b', 'c', 'a']);
+    expect(saved.map((r) => r.order), [0, 1, 2]);
+    final pull = tester.getTopLeft(find.text('Pull')).dy;
+    final legs = tester.getTopLeft(find.text('Legs')).dy;
+    final push = tester.getTopLeft(find.text('Push')).dy;
+    expect(pull, lessThan(legs));
+    expect(legs, lessThan(push));
+  });
+
+  testWidgets('dropping a routine in place saves nothing', (tester) async {
+    final repository = FakeRoutineRepository(
+      routines: [_routine('a', 'Push', 0, 1), _routine('b', 'Pull', 1, 1)],
+    );
+    await pumpRoutineApp(tester, repository: repository);
+
+    await dragHandle(tester, 'drag-a', 2);
+
+    final saved = await repository.watch().first;
+    expect(saved.map((r) => r.id), ['a', 'b']);
+    expect(saved.first.updatedAt, DateTime.utc(2026, 11, 5));
+  });
 }

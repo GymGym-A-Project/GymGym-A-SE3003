@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymgym_a/data/auth/auth_providers.dart';
@@ -31,7 +32,10 @@ void main() {
   setUp(() {
     auth = FakeAuthRepository();
     container = ProviderContainer(
-      overrides: [authRepositoryProvider.overrideWithValue(auth)],
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        firestoreProvider.overrideWithValue(FakeFirebaseFirestore()),
+      ],
     );
     addTearDown(container.dispose);
   });

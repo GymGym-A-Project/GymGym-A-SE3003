@@ -5,15 +5,18 @@ import 'package:flutter/foundation.dart';
 import 'package:gymgym_a/firebase_options.dart';
 
 /// Native production options are supplied by `flutterfire configure`.
-/// Explicit demo options can only be selected in debug emulator builds.
+/// Emulator mode is restricted to debug builds. Android starts the default app
+/// from google-services.json, so it reuses that app and connects it to the
+/// emulators; other platforms use explicit demo options.
 Future<void> initializeFirebase() async {
   const emulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS');
   const emulatorHost = String.fromEnvironment('FIREBASE_EMULATOR_HOST');
   if (emulators && !kDebugMode) {
     throw StateError('Firebase emulators are restricted to debug builds.');
   }
+  final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   await Firebase.initializeApp(
-    options: emulators
+    options: emulators && !isAndroid
         ? const FirebaseOptions(
             apiKey: 'demo-key',
             appId: '1:000000000000:android:0000000000000000',
@@ -28,7 +31,7 @@ Future<void> initializeFirebase() async {
   if (emulators) {
     final host = emulatorHost.isNotEmpty
         ? emulatorHost
-        : !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+        : isAndroid
         ? '10.0.2.2'
         : '127.0.0.1';
     firestore.useFirestoreEmulator(host, 8080);

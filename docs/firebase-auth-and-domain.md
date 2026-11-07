@@ -23,12 +23,14 @@ No rules, functions or application have been deployed by this implementation.
 ## Emulator development
 
 ```powershell
-firebase emulators:start --only auth,firestore --project demo-gymgym
+firebase emulators:start --only auth,firestore --project gymgym-a
 flutter run --dart-define=USE_FIREBASE_EMULATORS=true
 ```
 
-Debug emulator builds use the explicit demo project, Auth port 9099 and Firestore
-port 8080. Android's default host is `10.0.2.2`; other hosts default to
+Debug emulator builds use Auth port 9099 and Firestore port 8080. Android reuses
+the default app from `google-services.json`, so its emulators run as `gymgym-a`;
+other platforms use the explicit demo project. Android's default host is
+`10.0.2.2`; other hosts default to
 `127.0.0.1`. Override with `--dart-define=FIREBASE_EMULATOR_HOST=<host>` when
 needed. Release/profile builds reject the emulator switch. Firestore disk
 persistence is enabled before any query. Native mobile platforms are the
@@ -65,7 +67,7 @@ cd test/firebase
 npm ci
 cd ../..
 firebase emulators:exec --only firestore --project demo-gymgym "node --test test/firebase/firestore.rules.test.js"
-firebase emulators:exec --only auth,firestore --project demo-gymgym "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
+firebase emulators:exec --only auth,firestore --project gymgym-a "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
 ```
 
 The integration test requires an already running Android emulator. It registers
@@ -105,8 +107,9 @@ check whether the widget is still mounted.
 Rules default to deny, isolate users by authenticated UID, validate routine
 fields/items and workout top-level fields, and deny unknown collections.
 `lastPerformance` is currently read-only for its owner; a future logger/backend
-task must explicitly define its write validation. The fake repositories do not
-persist app data to Firestore; production data repositories are a separate task.
+task must explicitly define its write validation. `FirestoreRoutineRepository`
+persists routines to Firestore; workouts still use the fake repository, so a
+production workout repository is a separate task.
 Exercise screens and their existing attribution remain unchanged.
 
 ## External prerequisites still requiring verification

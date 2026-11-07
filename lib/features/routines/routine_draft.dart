@@ -18,9 +18,27 @@ class RoutineDraftItem {
   final int targetSets;
 }
 
-/// The unsaved routine on the create screen.
+/// The unsaved routine on the create and edit screens.
 class RoutineDraft {
   const RoutineDraft({this.name = '', this.items = const []});
+
+  /// A draft of [routine], keeping its exercise order. Exercises missing from
+  /// [catalog] stay in the routine under a placeholder name.
+  factory RoutineDraft.fromRoutine(Routine routine, List<Exercise> catalog) {
+    final byId = {for (final exercise in catalog) exercise.id: exercise};
+    final seen = <String>{};
+    return RoutineDraft(
+      name: routine.name,
+      items: List.unmodifiable([
+        for (final item in routine.items)
+          if (seen.add(item.exerciseId))
+            RoutineDraftItem(
+              byId[item.exerciseId] ?? _unknownExercise(item.exerciseId),
+              targetSets: item.targetSets,
+            ),
+      ]),
+    );
+  }
 
   final String name;
   final List<RoutineDraftItem> items;
@@ -37,6 +55,7 @@ class RoutineDraft {
     required String id,
     required int order,
     required DateTime updatedAt,
+    String source = 'custom',
   }) {
     return Routine(
       id: id,
@@ -49,15 +68,35 @@ class RoutineDraft {
             targetSets: item.targetSets,
           ),
       ],
-      source: 'custom',
+      source: source,
       updatedAt: updatedAt,
     );
   }
 }
 
+Exercise _unknownExercise(String id) => Exercise(
+  id: id,
+  name: 'Unknown exercise',
+  primaryMuscle: '',
+  targetMuscle: '',
+  secondaryMuscles: const [],
+  equipment: '',
+  equipmentSource: '',
+  movementType: '',
+  splitTags: const [],
+  instructions: const {},
+  instructionSteps: const {},
+  gifPath: '',
+  thumbPath: '',
+  mediaId: '',
+  attribution: '',
+);
+
 class RoutineDraftNotifier extends Notifier<RoutineDraft> {
   @override
   RoutineDraft build() => const RoutineDraft();
+
+  void load(RoutineDraft draft) => state = draft;
 
   void rename(String name) =>
       state = RoutineDraft(name: name, items: state.items);
@@ -77,6 +116,13 @@ class RoutineDraftNotifier extends Notifier<RoutineDraft> {
       if (item.exercise.id != exerciseId) item,
   ]);
 
+  /// Moves the item at [from] to index [to] of the list without that item.
+  void move(int from, int to) {
+    final items = [...state.items];
+    items.insert(to, items.removeAt(from));
+    _setItems(items);
+  }
+
   /// Changes the target sets of [exerciseId] by [delta], never below the minimum.
   void changeTargetSets(String exerciseId, int delta) => _setItems([
     for (final item in state.items)
@@ -93,7 +139,7 @@ class RoutineDraftNotifier extends Notifier<RoutineDraft> {
       state = RoutineDraft(name: state.name, items: List.unmodifiable(items));
 }
 
-/// Lives only while the create screen is open.
+/// Lives only while the create or edit screen is open.
 final routineDraftProvider =
     NotifierProvider.autoDispose<RoutineDraftNotifier, RoutineDraft>(
       RoutineDraftNotifier.new,
