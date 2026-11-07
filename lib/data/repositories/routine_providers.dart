@@ -1,26 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_providers.dart';
 import '../models/routine.dart';
-import 'fake_routine_repository.dart';
+import 'firestore_routine_repository.dart';
 import 'routine_repository.dart';
 
-/// One in-memory store per uid. Not auto-disposed, so a user's routines survive
-/// signing out and back in until the app is closed.
-final _sessionRoutineRepositoryProvider =
-    Provider.family<RoutineRepository, String>(
-      (ref, uid) => FakeRoutineRepository(),
-    );
+final firestoreProvider = Provider<FirebaseFirestore>(
+  (ref) => FirebaseFirestore.instance,
+);
 
 /// Routines of the signed-in user, or null while nobody is signed in.
 ///
 /// Follows the same rule as the router: an auth error counts as signed out.
-// TODO(#18): replace with FirestoreRoutineRepository
 final routineRepositoryProvider = Provider<RoutineRepository?>((ref) {
   final uid = ref.watch(
     authStateProvider.select((auth) => auth.hasError ? null : auth.value?.id),
   );
-  return uid == null ? null : ref.watch(_sessionRoutineRepositoryProvider(uid));
+  return uid == null
+      ? null
+      : FirestoreRoutineRepository(ref.watch(firestoreProvider), uid);
 });
 
 /// Live routine list of the signed-in user, sorted by routine order.
