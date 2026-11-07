@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymgym_a/data/models/routine.dart';
+import 'package:gymgym_a/data/models/routine_item.dart';
 import 'package:gymgym_a/features/routines/routine_draft.dart';
 
 import '../../helpers/fake_exercises.dart';
@@ -101,5 +103,71 @@ void main() {
     final ids = {for (var i = 0; i < 100; i++) newRoutineId()};
 
     expect(ids, hasLength(100));
+  });
+
+  group('editing', () {
+    Routine routine(List<RoutineItem> items) => Routine(
+      id: 'r1',
+      name: 'Push',
+      order: 4,
+      items: items,
+      source: 'starter:ppl',
+      updatedAt: DateTime.utc(2026, 11, 5),
+    );
+
+    List<String> ids() => draft().items.map((i) => i.exercise.id).toList();
+
+    test('a draft of a routine keeps name, order of items and sets', () {
+      final loaded = RoutineDraft.fromRoutine(
+        routine([
+          RoutineItem(exerciseId: '3', targetSets: 5),
+          RoutineItem(exerciseId: '1', targetSets: 2),
+        ]),
+        fakeExercises,
+      );
+
+      expect(loaded.name, 'Push');
+      expect(loaded.items.map((item) => item.exercise.name), [
+        'Barbell Squat',
+        'Bench Press',
+      ]);
+      expect(loaded.items.map((item) => item.targetSets), [5, 2]);
+    });
+
+    test('a repeated exercise of a routine is loaded once', () {
+      final loaded = RoutineDraft.fromRoutine(
+        routine([
+          RoutineItem(exerciseId: '1', targetSets: 5),
+          RoutineItem(exerciseId: '1', targetSets: 2),
+        ]),
+        fakeExercises,
+      );
+
+      expect(loaded.items.single.targetSets, 5);
+    });
+
+    test('move changes the item order', () {
+      fakeExercises.forEach(notifier.add);
+
+      notifier.move(0, 2);
+      expect(ids(), ['2', '3', '1']);
+
+      notifier.move(2, 0);
+      expect(ids(), ['1', '2', '3']);
+    });
+
+    test('toRoutine can keep the source of an edited routine', () {
+      notifier.rename('Push');
+      notifier.add(fakeExercises.first);
+
+      final saved = draft().toRoutine(
+        id: 'r1',
+        order: 4,
+        updatedAt: DateTime.utc(2026, 11, 7),
+        source: 'starter:ppl',
+      );
+
+      expect(saved.source, 'starter:ppl');
+    });
   });
 }
