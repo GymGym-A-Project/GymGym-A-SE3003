@@ -23,7 +23,7 @@ No rules, functions or application have been deployed by this implementation.
 ## Emulator development
 
 ```powershell
-firebase emulators:start --only auth,firestore --project demo-gymgym
+firebase emulators:start --only auth,firestore --project gymgym-a
 flutter run --dart-define=USE_FIREBASE_EMULATORS=true
 ```
 
@@ -65,7 +65,7 @@ cd test/firebase
 npm ci
 cd ../..
 firebase emulators:exec --only firestore --project demo-gymgym "node --test test/firebase/firestore.rules.test.js"
-firebase emulators:exec --only auth,firestore --project demo-gymgym "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
+firebase emulators:exec --only auth,firestore --project gymgym-a "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
 ```
 
 The integration test requires an already running Android emulator. It registers

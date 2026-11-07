@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,10 +18,10 @@ void main() {
     // Never run this test against a real Firebase project.
     expect(const bool.fromEnvironment('USE_FIREBASE_EMULATORS'), isTrue);
     await initializeFirebase();
-    expect(Firebase.app().options.projectId, 'demo-gymgym');
     final auth = FirebaseAuth.instance;
     final repository = FirebaseAuthRepository(auth);
     final db = FirebaseFirestore.instance;
+    expect(db.settings.host, endsWith(':8080'));
     await repository.signOut();
     await tester.pumpWidget(const ProviderScope(child: GymGymApp()));
     await tester.pumpAndSettle();
