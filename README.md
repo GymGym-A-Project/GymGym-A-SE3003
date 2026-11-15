@@ -81,4 +81,5 @@ CI runs `dart format`, `flutter analyze --fatal-infos`, `flutter test` and the F
 - [Planning Poker Estimation Log (`docs/planning-poker-estimates.md`)](docs/planning-poker-estimates.md)
 - [Definition of Done (`docs/definition-of-done.md`)](docs/definition-of-done.md)
 - [QA Test Checklist (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md)
+- [M3 Status Summary & Sprint 2 Priorities (`docs/m3-status-summary.md`)](docs/m3-status-summary.md)
 - [Submitted Milestone Reports (`docs/reports/`)](docs/reports/)
