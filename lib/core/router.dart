@@ -7,6 +7,7 @@ import '../features/analyzer/analyzer_screen.dart';
 import '../features/auth/auth_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/exercises_screen.dart';
+import '../features/history/exercise_history_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/logger/logger_screen.dart';
 import '../features/routines/routine_create_screen.dart';
@@ -26,6 +27,7 @@ abstract final class AppRoutes {
   static String exerciseDetail(String id) => '$exercises/$id';
   static String routineDetail(String id) => '$routines/$id';
   static String routineEdit(String id) => '$routines/$id/edit';
+  static String exerciseHistory(String id) => '$history/exercises/$id';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -106,7 +108,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
           _branch(AppRoutes.logger, const LoggerScreen()),
-          _branch(AppRoutes.history, const HistoryScreen()),
+          _branch(
+            AppRoutes.history,
+            const HistoryScreen(),
+            routes: [
+              GoRoute(
+                path: 'exercises/:id',
+                builder: (context, state) =>
+                    ExerciseHistoryScreen(id: state.pathParameters['id']!),
+              ),
+            ],
+          ),
           _branch(AppRoutes.analyzer, const AnalyzerScreen()),
         ],
       ),
