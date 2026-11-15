@@ -6,7 +6,10 @@ import 'package:gymgym_a/core/router.dart';
 import 'package:gymgym_a/data/auth/auth_providers.dart';
 import 'package:gymgym_a/data/auth/fake_auth_repository.dart';
 import 'package:gymgym_a/data/exercise_catalog.dart';
+import 'package:gymgym_a/data/repositories/fake_workout_session_repository.dart';
+import 'package:gymgym_a/data/repositories/workout_session_providers.dart';
 import 'package:gymgym_a/features/auth/auth_screen.dart';
+import 'package:gymgym_a/features/history/history_screen.dart';
 
 import '../../helpers/fake_exercises.dart';
 
@@ -18,6 +21,9 @@ Future<ProviderContainer> start(
     overrides: [
       authRepositoryProvider.overrideWithValue(auth),
       exerciseCatalogProvider.overrideWith((ref) async => fakeExercises),
+      workoutSessionRepositoryProvider.overrideWithValue(
+        FakeWorkoutSessionRepository(),
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -63,7 +69,7 @@ void main() {
       expect(find.byType(AuthScreen), findsOneWidget);
       container.read(appRouterProvider).go(AppRoutes.history);
       await tester.pumpAndSettle();
-      expect(find.text('History — coming soon'), findsNothing);
+      expect(find.byType(HistoryScreen), findsNothing);
     },
   );
 
@@ -84,7 +90,7 @@ void main() {
       await credentials(tester);
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.pumpAndSettle();
-      expect(find.text('History — coming soon'), findsOneWidget);
+      expect(find.byType(HistoryScreen), findsOneWidget);
     },
   );
 
