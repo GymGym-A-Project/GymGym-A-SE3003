@@ -58,6 +58,25 @@ void main() {
       expect(moved[1].items.single.exerciseId, '1');
     });
 
+    test('moving between the two ends restamps every routine', () {
+      for (final (from, to) in [(0, 2), (2, 0)]) {
+        final moved = reorderRoutines(routines, from, to, updatedAt: _now);
+
+        expect(moved.map((r) => r.order), [0, 1, 2]);
+        expect(moved.map((r) => r.updatedAt), [_now, _now, _now]);
+      }
+    });
+
+    test('dropping a routine on its own position changes nothing', () {
+      for (var index = 0; index < routines.length; index++) {
+        final moved = reorderRoutines(routines, index, index, updatedAt: _now);
+
+        for (var i = 0; i < routines.length; i++) {
+          expect(moved[i], same(routines[i]));
+        }
+      }
+    });
+
     test('closes gaps left by a deleted routine', () {
       final gaps = [_routine('b', 1), _routine('c', 2), _routine('d', 3)];
 
