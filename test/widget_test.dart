@@ -6,6 +6,9 @@ import 'package:gymgym_a/data/exercise_catalog.dart';
 import 'package:gymgym_a/data/auth/auth_providers.dart';
 import 'package:gymgym_a/data/auth/auth_repository.dart';
 import 'package:gymgym_a/data/auth/fake_auth_repository.dart';
+import 'package:gymgym_a/data/repositories/fake_workout_session_repository.dart';
+import 'package:gymgym_a/data/repositories/workout_session_providers.dart';
+import 'package:gymgym_a/features/history/history_screen.dart';
 
 import 'helpers/fake_exercises.dart';
 
@@ -20,6 +23,9 @@ void main() {
             ),
           ),
           exerciseCatalogProvider.overrideWith((ref) async => fakeExercises),
+          workoutSessionRepositoryProvider.overrideWithValue(
+            FakeWorkoutSessionRepository(),
+          ),
         ],
         child: const GymGymApp(),
       ),
@@ -33,6 +39,6 @@ void main() {
 
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
-    expect(find.text('History — coming soon'), findsOneWidget);
+    expect(find.byType(HistoryScreen), findsOneWidget);
   });
 }
