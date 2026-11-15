@@ -9,21 +9,57 @@ $env:Path = 'C:\dev\flutter-3.47.5\bin;' + $env:Path
 flutter pub get
 firebase login --reauth
 firebase projects:list
-flutterfire configure --project=<PROJECT_ID> --platforms=android,ios
+flutterfire configure --project=gymgym-a --platforms=android
 ```
 
-Use the team's existing Firebase project. Android's package is
+Use the team's existing Firebase project, `gymgym-a` (`.firebaserc`). Android's
+package is
 `com.gymgyma.gymgym_a`; iOS's bundle ID is `com.gymgyma.gymgyma`.
 The production bootstrap initializes the native default Firebase app using the
 platform files produced by FlutterFire. Do not substitute emulator identifiers
-for production configuration. Enable Email/Password in Firebase Authentication
-and create the project's Firestore database before a production-device check.
-No rules, functions or application have been deployed by this implementation.
+for production configuration. Android is configured in the repository; iOS
+Firebase options and `GoogleService-Info.plist` are still missing. The iOS bundle
+ID alone does not mean iOS is ready to run.
+
+### Verified production setup
+
+The following checks were completed on **7 November 2026** for `gymgym-a`:
+
+- Firestore `(default)` exists in `eur3` (created on 28 October 2026).
+- Firebase Authentication Email/Password is enabled, with a password required.
+- `firestore.rules` compiled successfully and was released to Cloud Firestore.
+  The CLI reported that the uploaded rules already matched the local file.
+
+These are dated verification results, not a claim that cloud settings cannot
+change. PR [#44](https://github.com/GymGym-A-Project/GymGym-A-SE3003/pull/44)
+also records Android emulator and production routine acceptance checks.
+This rules deployment does not deploy Cloud Functions, indexes or the app.
+
+### Production commands
+
+Run the app without the emulator flag to connect to the configured project:
+
+```powershell
+flutter run
+```
+
+To check the database and release the reviewed local rules to the live project:
+
+```powershell
+firebase firestore:databases:list --project gymgym-a
+firebase deploy --only firestore:rules --project gymgym-a
+```
+
+The deploy command changes the live project's security rules. It is not part
+of emulator setup. Confirm the current Email/Password setting in Firebase
+Console under Authentication > Sign-in method > Email/Password.
 
 ## Emulator development
 
 ```powershell
+# Terminal 1: keep the local services running.
 firebase emulators:start --only auth,firestore --project gymgym-a
+# Terminal 2: launch the Android app against those local services.
 flutter run --dart-define=USE_FIREBASE_EMULATORS=true
 ```
 
@@ -33,8 +69,13 @@ other platforms use the explicit demo project. Android's default host is
 `10.0.2.2`; other hosts default to
 `127.0.0.1`. Override with `--dart-define=FIREBASE_EMULATOR_HOST=<host>` when
 needed. Release/profile builds reject the emulator switch. Firestore disk
-persistence is enabled before any query. Native mobile platforms are the
-configured targets; web configuration is not included.
+persistence is enabled before any query. The emulator flag routes Auth and
+Firestore to local services even though Android's project ID remains
+`gymgym-a`. Do not use the project ID alone to decide whether a run is local;
+check the emulator flag and service hosts. Keep both services running for
+`flutter run`; the integration commands below start them via `emulators:exec`.
+Android is the configured production target; iOS and
+web production configuration are not included.
 
 On Windows, if Java reports `Unable to establish loopback connection` from
 `UnixDomainSockets`, use an existing ASCII temp directory:
@@ -68,12 +109,19 @@ npm ci
 cd ../..
 firebase emulators:exec --only firestore --project demo-gymgym "node --test test/firebase/firestore.rules.test.js"
 firebase emulators:exec --only auth,firestore --project gymgym-a "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
+firebase emulators:exec --only auth,firestore --project gymgym-a "flutter test integration_test/firestore_routine_repository_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
 ```
 
-The integration test requires an already running Android emulator. It registers
-an account in the demo Auth emulator, checks redirects on login/logout, requests
-a password reset and reads a Firestore document with the network disabled.
-It refuses to run against a production project.
+The integration tests require an already running Android emulator; replace
+`emulator-5554` with its device ID. Run each `emulators:exec` command with the
+standalone Firebase services stopped, so it can own ports 8080 and 9099.
+The auth test registers an account in the local Auth emulator, checks redirects
+on login/logout, requests a password reset and reads a cached Firestore document
+with the network disabled. The routine test checks rules acceptance, timestamp
+serialization, offline writes and synchronization after reconnecting. Both
+require `USE_FIREBASE_EMULATORS=true` and assert the Firestore host ends in
+`:8080`. They must not be run against production. The rules-only Node test uses
+the separate `demo-gymgym` project and does not launch the Android app.
 
 ## Domain contract
 
@@ -112,9 +160,11 @@ persists routines to Firestore; workouts still use the fake repository, so a
 production workout repository is a separate task.
 Exercise screens and their existing attribution remain unchanged.
 
-## External prerequisites still requiring verification
+## Remaining prerequisites
 
-- Firebase CLI authentication and the team's project ID.
-- FlutterFire-generated native project configuration.
-- Email/Password provider enabled and Firestore database created in that project.
-- Production-device check and teammate review before merge.
+- Each developer needs their own authenticated Firebase CLI session with access
+  to `gymgym-a`; successful setup on one machine does not sign in teammates.
+- Configure iOS with FlutterFire on an appropriate development machine and
+  record simulator/device acceptance evidence before claiming iOS support.
+- Keep emulator and production acceptance evidence current when Firebase code
+  or rules change, and obtain teammate review before merging changes.
