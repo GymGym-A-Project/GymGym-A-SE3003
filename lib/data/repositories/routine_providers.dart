@@ -36,3 +36,10 @@ final routineByIdProvider = Provider.family<AsyncValue<Routine?>, String>(
       .watch(routineListProvider)
       .whenData((all) => all.where((r) => r.id == id).firstOrNull),
 );
+
+/// Writes of the signed-in user the server rejected; see
+/// [RoutineRepository.writeFailures].
+final routineWriteFailuresProvider = StreamProvider<RoutineWriteFailure>((ref) {
+  final repository = ref.watch(routineRepositoryProvider);
+  return repository?.writeFailures ?? const Stream.empty();
+});

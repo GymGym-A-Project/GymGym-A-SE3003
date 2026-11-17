@@ -14,6 +14,10 @@ class FirestoreRoutineRepository implements RoutineRepository {
     : _routines = firestore.collection('users').doc(uid).collection('routines');
 
   final CollectionReference<Map<String, dynamic>> _routines;
+  final _failures = StreamController<RoutineWriteFailure>.broadcast();
+
+  @override
+  Stream<RoutineWriteFailure> get writeFailures => _failures.stream;
 
   @override
   Stream<List<Routine>> watch() => _routines
@@ -40,19 +44,32 @@ class FirestoreRoutineRepository implements RoutineRepository {
   }
 
   @override
-  Future<void> save(Routine routine) async =>
-      _write(_routines.doc(routine.id).set(_toDocument(routine)));
+  Future<void> save(Routine routine) async => track(
+    RoutineWriteOperation.save,
+    routine.id,
+    _routines.doc(routine.id).set(_toDocument(routine)),
+  );
 
   @override
-  Future<void> delete(String id) async => _write(_routines.doc(id).delete());
+  Future<void> delete(String id) async =>
+      track(RoutineWriteOperation.delete, id, _routines.doc(id).delete());
 
   /// Firestore applies a write to the local cache and to [watch] at once, but
   /// its future completes only when the server confirms it. Waiting would block
-  /// the UI for as long as the device is offline.
-  void _write(Future<void> confirmed) => unawaited(
-    confirmed.catchError(
-      (Object error) => debugPrint('Routine write rejected: $error'),
-    ),
+  /// the UI for as long as the device is offline, so a rejection is reported
+  /// through [writeFailures] instead.
+  @visibleForTesting
+  void track(
+    RoutineWriteOperation operation,
+    String id,
+    Future<void> confirmed,
+  ) => unawaited(
+    confirmed.catchError((Object error) {
+      debugPrint('Routine write rejected: $error');
+      // Offline: the write stays pending and is sent once the network returns.
+      if (error is FirebaseException && error.code == 'unavailable') return;
+      _failures.add(RoutineWriteFailure(operation, id));
+    }),
   );
 
   static Map<String, dynamic> _toDocument(Routine routine) => {
