@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router.dart';
 import '../../data/models/routine.dart';
 import '../../data/repositories/routine_providers.dart';
+import '../../data/repositories/routine_repository.dart';
 import 'routine_order.dart';
 
 class RoutinesScreen extends ConsumerWidget {
@@ -12,6 +13,14 @@ class RoutinesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The other routine screens are stacked above this one, so a rejection is
+    // shown wherever the user went after saving or deleting.
+    ref.listen(routineWriteFailuresProvider, (_, next) {
+      if (next case AsyncData(:final value)) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_rejectedMessage(value))));
+      }
+    });
     return Scaffold(
       appBar: AppBar(title: const Text('Routines')),
       floatingActionButton: FloatingActionButton.extended(
@@ -31,6 +40,14 @@ class RoutinesScreen extends ConsumerWidget {
     );
   }
 }
+
+String _rejectedMessage(RoutineWriteFailure failure) =>
+    switch (failure.operation) {
+      RoutineWriteOperation.save =>
+        'Could not save your routine on the server. Your change was undone.',
+      RoutineWriteOperation.delete =>
+        'Could not delete your routine on the server. It has been restored.',
+    };
 
 class _RoutineList extends ConsumerStatefulWidget {
   const _RoutineList(this.routines);
