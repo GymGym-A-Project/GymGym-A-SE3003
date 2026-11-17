@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymgym_a/data/models/routine.dart';
 import 'package:gymgym_a/data/models/routine_item.dart';
 import 'package:gymgym_a/data/repositories/firestore_routine_repository.dart';
+import 'package:gymgym_a/data/repositories/routine_repository.dart';
 
 final _updatedAt = DateTime.utc(2026, 11, 7, 12, 30, 15, 250);
 
@@ -132,5 +133,66 @@ void main() {
 
     await other.delete('r1');
     expect(await repository.get('r1'), isNotNull);
+  });
+
+  group('writeFailures', () {
+    FirebaseException error(String code) =>
+        FirebaseException(plugin: 'cloud_firestore', code: code);
+
+    test('a rejected save emits one failure with its operation', () async {
+      final failures = <RoutineWriteFailure>[];
+      repository.writeFailures.listen(failures.add);
+
+      repository.track(
+        RoutineWriteOperation.save,
+        'r1',
+        Future.error(error('permission-denied')),
+      );
+      await pumpEventQueue();
+
+      expect(failures, hasLength(1));
+      expect(failures.single.operation, RoutineWriteOperation.save);
+      expect(failures.single.routineId, 'r1');
+    });
+
+    test('a rejected delete emits a delete failure', () async {
+      final failures = <RoutineWriteFailure>[];
+      repository.writeFailures.listen(failures.add);
+
+      repository.track(
+        RoutineWriteOperation.delete,
+        'r2',
+        Future.error(error('permission-denied')),
+      );
+      await pumpEventQueue();
+
+      expect(failures.single.operation, RoutineWriteOperation.delete);
+      expect(failures.single.routineId, 'r2');
+    });
+
+    test('an unavailable error is not reported', () async {
+      final failures = <RoutineWriteFailure>[];
+      repository.writeFailures.listen(failures.add);
+
+      repository.track(
+        RoutineWriteOperation.save,
+        'r1',
+        Future.error(error('unavailable')),
+      );
+      await pumpEventQueue();
+
+      expect(failures, isEmpty);
+    });
+
+    test('accepted writes emit nothing', () async {
+      final failures = <RoutineWriteFailure>[];
+      repository.writeFailures.listen(failures.add);
+
+      await repository.save(_routine('r1'));
+      await repository.delete('r1');
+      await pumpEventQueue();
+
+      expect(failures, isEmpty);
+    });
   });
 }
