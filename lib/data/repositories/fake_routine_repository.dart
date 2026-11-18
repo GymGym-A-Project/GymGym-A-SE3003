@@ -13,6 +13,14 @@ class FakeRoutineRepository implements RoutineRepository {
 
   final Map<String, Routine> _routines = {};
   final Set<StreamController<List<Routine>>> _listeners = {};
+  final _failures = StreamController<RoutineWriteFailure>.broadcast();
+
+  @override
+  Stream<RoutineWriteFailure> get writeFailures => _failures.stream;
+
+  /// Reports [operation] on [routineId] as rejected by the server.
+  void rejectWrite(RoutineWriteOperation operation, String routineId) =>
+      _failures.add(RoutineWriteFailure(operation, routineId));
 
   List<Routine> _snapshot() {
     final positions = {

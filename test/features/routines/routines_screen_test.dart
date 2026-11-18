@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymgym_a/core/router.dart';
 import 'package:gymgym_a/data/models/routine.dart';
 import 'package:gymgym_a/data/models/routine_item.dart';
 import 'package:gymgym_a/data/repositories/fake_routine_repository.dart';
+import 'package:gymgym_a/data/repositories/routine_repository.dart';
 import 'package:gymgym_a/features/routines/routine_create_screen.dart';
 import 'package:gymgym_a/features/routines/routine_detail_screen.dart';
 
@@ -105,5 +107,45 @@ void main() {
     final saved = await repository.watch().first;
     expect(saved.map((r) => r.id), ['a', 'b']);
     expect(saved.first.updatedAt, DateTime.utc(2026, 11, 5));
+  });
+
+  testWidgets('a rejected save shows that the change was undone', (
+    tester,
+  ) async {
+    final repository = FakeRoutineRepository();
+    await pumpRoutineApp(tester, repository: repository);
+
+    repository.rejectWrite(RoutineWriteOperation.save, 'a');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Could not save your routine on the server. Your change was undone.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a rejected delete shows that the routine was restored', (
+    tester,
+  ) async {
+    final repository = FakeRoutineRepository(
+      routines: [_routine('a', 'Push', 0, 1)],
+    );
+    await pumpRoutineApp(
+      tester,
+      location: AppRoutes.routineDetail('a'),
+      repository: repository,
+    );
+
+    repository.rejectWrite(RoutineWriteOperation.delete, 'a');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Could not delete your routine on the server. It has been restored.',
+      ),
+      findsOneWidget,
+    );
   });
 }
