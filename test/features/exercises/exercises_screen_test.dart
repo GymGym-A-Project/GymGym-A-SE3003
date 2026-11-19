@@ -32,6 +32,15 @@ void main() {
     expect(find.byIcon(Icons.fitness_center), findsNWidgets(3));
   });
 
+  testWidgets('counts the visible exercises above the list', (tester) async {
+    await _pumpScreen(tester);
+    expect(find.text('3 EXERCISES'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 EXERCISE'), findsOneWidget);
+  });
+
   testWidgets('tapping a muscle chip filters the list', (tester) async {
     await _pumpScreen(tester);
 
