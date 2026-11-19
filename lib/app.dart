@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router.dart';
-import 'core/theme.dart';
+import 'core/theme/app_theme.dart';
 
 class GymGymApp extends ConsumerWidget {
   const GymGymApp({super.key});
@@ -13,6 +13,7 @@ class GymGymApp extends ConsumerWidget {
       title: 'GymGym-A',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      themeMode: AppTheme.mode,
       routerConfig: ref.watch(appRouterProvider),
     );
   }

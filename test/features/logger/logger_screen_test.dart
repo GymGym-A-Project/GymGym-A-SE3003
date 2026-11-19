@@ -184,6 +184,8 @@ void main() {
           )
           .first,
     );
+    await tester.ensureVisible(find.byKey(const ValueKey('finish-workout')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('finish-workout')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -199,6 +201,8 @@ void main() {
           )
           .first,
     );
+    await tester.ensureVisible(find.byKey(const ValueKey('weight-1-0')));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('weight-1-0')), '0');
     await tester.enterText(find.byKey(const ValueKey('reps-1-0')), '12');
     tester.testTextInput.hide();
@@ -212,6 +216,8 @@ void main() {
           )
           .first,
     );
+    await tester.ensureVisible(find.byKey(const ValueKey('finish-workout')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('finish-workout')));
     await tester.pumpAndSettle();
     expect(find.text('No completed workouts yet'), findsNothing);
