@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/auth/auth_providers.dart';
+import '../theme/gaps.dart';
+import '../theme/gym_colors.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
@@ -11,39 +13,61 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = GymColors.of(context);
     return Scaffold(
       body: shell,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _SignOutButton(),
-          NavigationBar(
-            selectedIndex: shell.currentIndex,
-            onDestinationSelected: (index) => shell.goBranch(
-              index,
-              initialLocation: index == shell.currentIndex,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _SignOutButton(),
+            // Floating bar, inset 12 from the screen edges.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Gap.m, 0, Gap.m, Gap.m),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: Radii.sheetBorder,
+                  border: Border.all(color: colors.border),
+                ),
+                child: ClipRRect(
+                  borderRadius: Radii.sheetBorder,
+                  child: NavigationBar(
+                    selectedIndex: shell.currentIndex,
+                    onDestinationSelected: (index) => shell.goBranch(
+                      index,
+                      initialLocation: index == shell.currentIndex,
+                    ),
+                    labelBehavior:
+                        NavigationDestinationLabelBehavior.alwaysShow,
+                    destinations: const [
+                      NavigationDestination(
+                        icon: Icon(Icons.fitness_center),
+                        label: 'Exercises',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.list_alt),
+                        label: 'Routines',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.timer),
+                        label: 'Workout',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.history),
+                        label: 'History',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.insights),
+                        label: 'Analyzer',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.fitness_center),
-                label: 'Exercises',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.list_alt),
-                label: 'Routines',
-              ),
-              NavigationDestination(icon: Icon(Icons.timer), label: 'Workout'),
-              NavigationDestination(
-                icon: Icon(Icons.history),
-                label: 'History',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.insights),
-                label: 'Analyzer',
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -83,10 +107,17 @@ class _SignOutButtonState extends ConsumerState<_SignOutButton> {
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.centerRight,
-    child: TextButton.icon(
-      onPressed: _busy ? null : _signOut,
-      icon: const Icon(Icons.logout),
-      label: const Text('Sign out'),
+    child: Padding(
+      padding: const EdgeInsets.only(right: Gap.s),
+      child: TextButton.icon(
+        onPressed: _busy ? null : _signOut,
+        style: TextButton.styleFrom(
+          foregroundColor: GymColors.of(context).textMuted,
+          minimumSize: const Size(48, 40),
+        ),
+        icon: const Icon(Icons.logout, size: 18),
+        label: const Text('Sign out'),
+      ),
     ),
   );
 }

@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
+import '../../core/theme/app_text.dart';
+import '../../core/theme/gaps.dart';
+import '../../core/theme/gym_colors.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../data/exercise_catalog.dart';
-import '../../data/models/exercise.dart';
 import 'exercise_filter.dart';
 import 'exercise_widgets.dart';
 
@@ -18,6 +21,7 @@ class ExercisesScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Exercises')),
       body: catalog.when(
         data: (exercises) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _SearchField(),
             const _MuscleChips(),
@@ -39,13 +43,11 @@ class _SearchField extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(Gap.screen, Gap.s, Gap.screen, 0),
       child: TextField(
         decoration: const InputDecoration(
           hintText: 'Search exercises',
           prefixIcon: Icon(Icons.search),
-          border: OutlineInputBorder(),
-          isDense: true,
         ),
         onChanged: ref.read(searchQueryProvider.notifier).update,
       ),
@@ -72,27 +74,39 @@ class _ExerciseList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final exercises = ref.watch(filteredExercisesProvider).value ?? const [];
     if (exercises.isEmpty) {
-      return const Center(child: Text('No exercises match your search.'));
+      return const EmptyState(
+        icon: Icons.search_off,
+        title: 'No exercises match your search.',
+        message: 'Try another name or muscle group.',
+      );
     }
+    final colors = GymColors.of(context);
     return ListView.builder(
-      itemCount: exercises.length,
-      itemBuilder: (context, index) => _ExerciseTile(exercises[index]),
-    );
-  }
-}
-
-class _ExerciseTile extends StatelessWidget {
-  const _ExerciseTile(this.exercise);
-
-  final Exercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: ExerciseThumbnail(exercise.thumbPath),
-      title: Text(exercise.name),
-      subtitle: Text(exerciseSummary(exercise)),
-      onTap: () => context.go(AppRoutes.exerciseDetail(exercise.id)),
+      padding: const EdgeInsets.only(bottom: Gap.s),
+      itemCount: exercises.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Gap.screen,
+              Gap.xs,
+              Gap.screen,
+              Gap.s,
+            ),
+            child: Text(
+              exercises.length == 1
+                  ? '1 EXERCISE'
+                  : '${exercises.length} EXERCISES',
+              style: AppText.label.copyWith(color: colors.textMuted),
+            ),
+          );
+        }
+        final exercise = exercises[index - 1];
+        return ExerciseTile(
+          exercise,
+          onTap: () => context.go(AppRoutes.exerciseDetail(exercise.id)),
+        );
+      },
     );
   }
 }

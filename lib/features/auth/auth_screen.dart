@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_text.dart';
+import '../../core/theme/gaps.dart';
+import '../../core/theme/gym_colors.dart';
 import '../../data/auth/auth_providers.dart';
 import '../../data/auth/auth_repository.dart';
 
@@ -104,121 +107,185 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       _Mode.register => 'Create account',
       _Mode.reset => 'Reset password',
     };
+    final colors = GymColors.of(context);
+    final subtitle = switch (_mode) {
+      _Mode.signIn => 'Welcome back. Sign in to continue.',
+      _Mode.register => 'Create an account to save your workouts.',
+      _Mode.reset => 'We will email you a link to reset your password.',
+    };
     return Scaffold(
-      appBar: AppBar(title: const Text('GymGym-A')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Form(
-              key: _form,
-              child: AutofillGroup(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      key: const ValueKey('auth-email'),
-                      controller: _email,
-                      enabled: !_busy,
-                      keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (value) =>
-                          RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-                              .hasMatch(value?.trim() ?? '')
-                          ? null
-                          : 'Enter a valid email address.',
-                    ),
-                    if (_mode != _Mode.reset) ...[
-                      const SizedBox(height: 16),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(Gap.xl),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Form(
+                key: _form,
+                child: AutofillGroup(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _Brand(),
+                      const SizedBox(height: Gap.xxl),
+                      Text(
+                        title,
+                        style: AppText.title.copyWith(color: colors.text),
+                      ),
+                      const SizedBox(height: Gap.xs),
+                      Text(
+                        subtitle,
+                        style: AppText.body.copyWith(color: colors.textMuted),
+                      ),
+                      Gap.vXl,
                       TextFormField(
-                        key: const ValueKey('auth-password'),
-                        controller: _password,
+                        key: const ValueKey('auth-email'),
+                        controller: _email,
                         enabled: !_busy,
-                        obscureText: true,
+                        keyboardType: TextInputType.emailAddress,
                         autocorrect: false,
-                        enableSuggestions: false,
-                        autofillHints: [
-                          _mode == _Mode.register
-                              ? AutofillHints.newPassword
-                              : AutofillHints.password,
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Password',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter your password.';
-                          }
-                          if (_mode == _Mode.register && value.length < 6) {
-                            return 'Use at least 6 characters.';
-                          }
-                          return null;
-                        },
+                        autofillHints: const [AutofillHints.email],
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (value) =>
+                            RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+                                .hasMatch(value?.trim() ?? '')
+                            ? null
+                            : 'Enter a valid email address.',
                       ),
+                      if (_mode != _Mode.reset) ...[
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          key: const ValueKey('auth-password'),
+                          controller: _password,
+                          enabled: !_busy,
+                          obscureText: true,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          autofillHints: [
+                            _mode == _Mode.register
+                                ? AutofillHints.newPassword
+                                : AutofillHints.password,
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter your password.';
+                            }
+                            if (_mode == _Mode.register && value.length < 6) {
+                              return 'Use at least 6 characters.';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                      if (_mode == _Mode.register) ...[
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          key: const ValueKey('auth-confirm'),
+                          controller: _confirm,
+                          enabled: !_busy,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Confirm password',
+                          ),
+                          validator: (value) => value == _password.text
+                              ? null
+                              : 'Passwords do not match.',
+                        ),
+                      ],
+                      if (_message != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Container(
+                            padding: const EdgeInsets.all(Gap.m),
+                            decoration: BoxDecoration(
+                              color: colors.surface2,
+                              borderRadius: Radii.inputBorder,
+                            ),
+                            child: Text(
+                              _message!,
+                              key: const ValueKey('auth-message'),
+                              style: AppText.body.copyWith(color: colors.text),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: _busy ? null : _submit,
+                        child: Text(_busy ? 'Please wait…' : title),
+                      ),
+                      if (_mode == _Mode.signIn) ...[
+                        TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => _changeMode(_Mode.register),
+                          child: const Text('Create account'),
+                        ),
+                        TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => _changeMode(_Mode.reset),
+                          child: const Text('Forgot password?'),
+                        ),
+                      ] else
+                        TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => _changeMode(_Mode.signIn),
+                          child: const Text('Back to sign in'),
+                        ),
                     ],
-                    if (_mode == _Mode.register) ...[
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        key: const ValueKey('auth-confirm'),
-                        controller: _confirm,
-                        enabled: !_busy,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Confirm password',
-                        ),
-                        validator: (value) => value == _password.text
-                            ? null
-                            : 'Passwords do not match.',
-                      ),
-                    ],
-                    if (_message != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text(
-                          _message!,
-                          key: const ValueKey('auth-message'),
-                        ),
-                      ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _busy ? null : _submit,
-                      child: Text(_busy ? 'Please wait…' : title),
-                    ),
-                    if (_mode == _Mode.signIn) ...[
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () => _changeMode(_Mode.register),
-                        child: const Text('Create account'),
-                      ),
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () => _changeMode(_Mode.reset),
-                        child: const Text('Forgot password?'),
-                      ),
-                    ] else
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () => _changeMode(_Mode.signIn),
-                        child: const Text('Back to sign in'),
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Logo mark, name and tagline.
+class _Brand extends StatelessWidget {
+  const _Brand();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GymColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: colors.kor,
+            borderRadius: Radii.cardBorder,
+          ),
+          child: Icon(Icons.bolt_rounded, size: 34, color: colors.onKor),
+        ),
+        Gap.vL,
+        Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'GymGym'),
+              TextSpan(
+                text: '-A',
+                style: TextStyle(color: colors.kor),
+              ),
+            ],
+          ),
+          style: AppText.display.copyWith(fontSize: 32, color: colors.text),
+        ),
+        const SizedBox(height: Gap.xs),
+        Text(
+          'Log your sets, catch the plateau.',
+          style: AppText.body.copyWith(color: colors.textMuted),
+        ),
+      ],
     );
   }
 }
