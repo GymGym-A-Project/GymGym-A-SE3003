@@ -167,6 +167,22 @@ void main() {
     expect(find.text('Push day'), findsOneWidget);
   });
 
+  testWidgets('header counts completed sets and their volume live', (
+    tester,
+  ) async {
+    await pumpLogger(tester);
+    await tester.tap(find.byKey(const ValueKey('start-workout')));
+    await tester.pumpAndSettle();
+    expect(find.text('IN PROGRESS'), findsOneWidget);
+    expect(find.text('0 / 1'), findsOneWidget);
+    expect(find.text('0 kg'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('weight-1-0')), '60');
+    await tester.enterText(find.byKey(const ValueKey('reps-1-0')), '8');
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 1'), findsOneWidget);
+    expect(find.text('480 kg'), findsOneWidget);
+  });
+
   testWidgets('small phone fits validation messages and bodyweight input', (
     tester,
   ) async {
