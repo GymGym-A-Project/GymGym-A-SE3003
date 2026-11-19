@@ -167,34 +167,53 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
             );
           }
           if (draft.isFinished) {
+            final colors = GymColors.of(context);
             return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      draft.routineName,
-                      style: Theme.of(context).textTheme.titleMedium,
+              padding: const EdgeInsets.fromLTRB(
+                Gap.screen,
+                Gap.l,
+                Gap.screen,
+                Gap.xl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    draft.routineName,
+                    textAlign: TextAlign.center,
+                    style: AppText.headline.copyWith(color: colors.textMuted),
+                  ),
+                  Gap.vL,
+                  WorkoutSummary(session: draft.toSession()),
+                  Gap.vXl,
+                  Text(
+                    'Workout saved on this device',
+                    textAlign: TextAlign.center,
+                    style: AppText.body.copyWith(color: colors.text),
+                  ),
+                  Text(
+                    'Offline changes will sync when you reconnect.',
+                    textAlign: TextAlign.center,
+                    style: AppText.body.copyWith(
+                      fontSize: 13,
+                      color: colors.textMuted,
                     ),
-                    WorkoutSummary(session: draft.toSession()),
-                    const SizedBox(height: 16),
-                    const Text('Workout saved on this device'),
-                    const Text('Offline changes will sync when you reconnect.'),
-                    FilledButton(
-                      onPressed: () => context.go(AppRoutes.history),
-                      child: const Text('View history'),
-                    ),
-                    TextButton(
-                      onPressed: _busy ? null : () => _finish(uid),
-                      child: const Text('Retry saving workout'),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go(AppRoutes.routines),
-                      child: const Text('Choose next routine'),
-                    ),
-                  ],
-                ),
+                  ),
+                  Gap.vL,
+                  FilledButton(
+                    onPressed: () => context.go(AppRoutes.history),
+                    child: const Text('View history'),
+                  ),
+                  Gap.vS,
+                  OutlinedButton(
+                    onPressed: () => context.go(AppRoutes.routines),
+                    child: const Text('Choose next routine'),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : () => _finish(uid),
+                    child: const Text('Retry saving workout'),
+                  ),
+                ],
               ),
             );
           }
