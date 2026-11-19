@@ -120,11 +120,11 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | Test ID | Criterion | Type | How to run / perform | Covering test | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | QA-WP06-01 | Session snapshots are ordered by start time (newest first, ties by ID) and update listeners on save and delete. | unit | `flutter test test/data/workout_session_test.dart` | `workout_session_test.dart` (`fake CRUD, sorting…`, `each observer receives…`) | Automated ✅ |
-| QA-WP06-02 | A completed workout appears in History immediately, in chronological order. | widget, integration | — | — (`HistoryScreen` is a placeholder) | Not yet implemented — Sprint 2 |
-| QA-WP06-03 | Selecting an exercise shows weight/rep performance by date. | widget | — | — | Not yet implemented — Sprint 2 |
-| QA-WP06-04 | The 30-day history query from the local cache stays < 50 ms (M1 spike target). | performance | Profile build on the emulator with seeded data. | — (spike result: 36 ms median, profile mode; not an app test) | Not yet implemented — Sprint 2 |
+| QA-WP06-02 | A completed workout appears in History immediately, in chronological order (newest first, D-4). | widget, integration | `flutter test test/features/history/ test/features/logger/`; Android: `integration_test/m3_demo_test.dart` | `history_screen_test.dart` (`lists completed sessions newest first, without unfinished…`, `a session saved later appears without a restart`), `logger_screen_test.dart` (finish → View history), `workout_session_providers_test.dart` (`history keeps only finished sessions, newest first`) | Automated ✅; Android run in the M3 demo (local) |
+| QA-WP06-03 | Selecting an exercise shows weight/rep performance by date. | unit, widget | `flutter test test/features/history/` | `history_screen_test.dart` (`the by-exercise tab lists performed exercises and opens one`, `exercise history shows date-by-date max weight, best set and…`), `exercise_progress_test.dart` | Automated ✅ |
+| QA-WP06-04 | The 30-day history query from the local cache stays < 50 ms (M1 spike target). | performance | Profile build on the emulator or a device with seeded data. | — (spike result: 36 ms median, profile mode; not an app test) | Not yet implemented — device profile run pending (Sprint 3) |
 
-> **Open question for the Product Owner (WP-06):** the repository contract sorts **newest first**. The baseline wording "chronological order" can be read either way. This needs confirming before QA-WP06-02 is written.
+> **PO decision D-4 (WP-06, #21, 19.11.2026):** "chronological order" means **newest first**: sessions are ordered by `startedAt` descending, with the session ID breaking ties. QA-WP06-01 and QA-WP06-02 test this order.
 
 ## WP-07 — Plateau analyzer & AI explanation (Sprint 3)
 
@@ -167,7 +167,7 @@ These 10 datasets are the fixed inputs for QA-WP07-01. Each must become one unit
 | `TC-P09` | Stalled | Bodyweight stagnation | `0 kg × 12 × 3` → `0 × 12 × 3` → `0 × 11 × 3` | `true` | No increase in load or reps |
 | `TC-P10` | Irregular | Two exercises in one log | `0025` stalled for 3 sessions; `0033` progresses in weight | `0025: true`, `0033: false` | Each `exerciseId` is evaluated independently |
 
-> **Open question (TC-P09):** with volume defined as `weightKg × reps`, a bodyweight exercise always has volume 0. As written, the rule would flag it even if reps went from 12 to 15. Sprint 3 must decide whether bodyweight exercises use total reps as their volume. Then TC-P09 should get a "reps increase → `false`" sibling case.
+> **PO decision D-4 (TC-P09, #23, 19.11.2026):** for bodyweight exercises (every set `weightKg = 0`) the plateau rule uses **total reps** (Σ `reps`) as the volume. TC-P09 stays `true` (12 → 12 → 11 reps). In Sprint 3 it gets a sibling case where reps rise from 12 to 15, with the expected flag `false`.
 
 ---
 
