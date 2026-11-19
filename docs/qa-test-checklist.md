@@ -2,7 +2,7 @@
 
 - **Maintained by:** Berat Kaan Akcan (`230717052` — Quality and Test Lead)
 - **Baseline:** M2 Project Plan Baseline Report (submitted 01.11.2026), acceptance criteria per Work Package
-- **Last reviewed:** 28.10.2026, against `main` @ `4d44745`
+- **Last reviewed:** 19.11.2026, against `main` @ `edc3c0b` (M3 review)
 - **Related:** [Definition of Done (`docs/definition-of-done.md`)](definition-of-done.md) · [Firebase, Auth & Domain Contract (`docs/firebase-auth-and-domain.md`)](firebase-auth-and-domain.md) · [Week 3 Spike Summary (`docs/spike-summary.md`)](spike-summary.md)
 
 This checklist turns each M2 acceptance criterion into one or more test cases. Each row says how the case is checked and whether that check exists today. It is the reference for DoD item **(b)** (emulator acceptance) and item **(d)** (tests pass).
@@ -32,23 +32,24 @@ This checklist turns each M2 acceptance criterion into one or more test cases. E
 
 ## Coverage summary
 
-WP-05 statuses and the US-14 proxy rows of WP-07 were updated on 19.11.2026;
-other WP rows retain their earlier review dates. This table is coverage, not a claim that all suites
-were rerun together. See the dated test-run log below.
+All rows were reviewed for M3 on 19.11.2026 against `main` @ `edc3c0b`. WP-04 and WP-06 rows now
+point to the tests merged in PRs #43, #44, #48, #49 and #50; the WP-05 and US-14 rows were updated by
+the logger and proxy PRs (#51, #52, #53). This table is coverage. Which suites were rerun, and when,
+is recorded in the dated test-run log below.
 
 | WP | Sprint | Test cases | Automated ✅ | Manual | Not yet implemented |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | WP-01 | 1 | 8 | 5 | 1 | 2 |
 | WP-02 | 1 | 8 | 6 | 2 | 0 |
 | WP-03 | 1 | 7 | 6 | 1 | 0 |
-| WP-04 | 1 | 7 | 3 | 0 | 4 |
+| WP-04 | 1 | 7 | 7 | 0 | 0 |
 | WP-05 | 2 | 6 | 6 | 0 | 0 |
-| WP-06 | 2 | 4 | 1 | 0 | 3 |
+| WP-06 | 2 | 4 | 3 | 0 | 1 |
 | WP-07 | 3 | 9 | 4 | 0 | 5 |
 | WP-08 | 4 | 3 | 0 | 0 | 3 |
-| **Total** | | **52** | **31** | **4** | **17** |
+| **Total** | | **52** | **37** | **4** | **11** |
 
-All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 passing, the Firestore rules tests gave 4/4 passing (locally and in the CI `firestore-rules` job), and `npm test` in `functions/` gave 5/5 passing. The integration test was **not** re-run because it needs a running Android emulator. Its status is based on PR #40 and must be confirmed in the first M3 test run.
+M3 regression on 19.11.2026 (`main` @ `edc3c0b`): `flutter test` 189/189, Firestore rules tests 4/4 and `npm test` in `functions/` 11/11 passing. The Android integration suites were run on the emulator by Doğukan Direksiz (routine repository, 1/1) and Çağatay Oruk (logger, ghost values and the M3 demo); the QA workstation has no Android emulator. The 4 manual WP-04 rows passed on 19.11.2026. Details are in the [test-run log](#test-run-log-m3).
 
 ---
 
@@ -99,10 +100,10 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | QA-WP04-01 | The routine domain model accepts 1 and 15 exercises and rejects 0 and 16; it also rejects blank names and non-positive target sets. | unit | `flutter test test/data/routine_test.dart` | `test/data/routine_test.dart` | Automated ✅ |
 | QA-WP04-02 | Firestore rules enforce 1–15 items and valid routine fields. | Firestore rules | Firestore rules tests | `firestore.rules.test.js` (`routine validation rejects malformed values and accepts 15 items`, `owners can create, read, update and delete their routines`) | Automated ✅ |
 | QA-WP04-03 | The repository contract covers create, get, update, delete and reorder, with live updates to listeners. | unit | `flutter test test/data/fake_routine_repository_test.dart` | `test/data/fake_routine_repository_test.dart` | Automated ✅ |
-| QA-WP04-04 | User can create, view, edit and delete a routine from the UI. | widget, manual-emulator | — | — (`RoutinesScreen` is a placeholder) | Not yet implemented — Sprint 1 |
-| QA-WP04-05 | User can reorder routines and the exercises inside a routine from the UI. | widget, manual-emulator | — | — | Not yet implemented — Sprint 1 |
-| QA-WP04-06 | Changes are saved instantly to Firestore under `users/{uid}/routines`. | integration | — | — (only `FakeRoutineRepository` exists; no Firestore-backed repository yet) | Not yet implemented — Sprint 1 |
-| QA-WP04-07 | Changes made offline appear immediately (offline cache) and sync after reconnecting. | integration, manual-emulator | Create or edit a routine in airplane mode, relaunch the app, then reconnect and check the Firestore emulator. | Partial: `firebase_auth_test.dart` proves a routine document can be read from the cache with the network disabled. | Not yet implemented — Sprint 1 |
+| QA-WP04-04 | User can create, view, edit and delete a routine from the UI. | widget, manual-emulator | `flutter test test/features/routines/`; manual run on the Android emulator | `routine_create_screen_test.dart` (`create flow: name, 2 exercises and sets appear in the list`), `routine_edit_screen_test.dart` (`a saved edit shows in the view and the list`), `routine_detail_screen_test.dart` (`confirm removes the routine and goes back to the list`), `routines_screen_test.dart` | Automated ✅; manual emulator run passed 19.11.2026 |
+| QA-WP04-05 | User can reorder routines and the exercises inside a routine from the UI. | widget, manual-emulator | as above | `routines_screen_test.dart` (`dragging a routine updates its order and the display order`, `dropping a routine in place saves nothing`), `routine_edit_screen_test.dart` (`dragging an exercise saves the new exercise order`), `routine_order_test.dart` | Automated ✅; manual emulator run passed 19.11.2026 |
+| QA-WP04-06 | Changes are saved instantly to Firestore under `users/{uid}/routines`; a write the server rejects is undone and the user is told (#45). | unit, widget, integration | `flutter test test/data/ test/features/routines/`; integration suite 3 (`integration_test/firestore_routine_repository_test.dart`) | `firestore_routine_repository_test.dart` (round trip, allowed keys, user scope, `a rejected save emits one failure…`), `routines_screen_test.dart` (`a rejected save shows that the change was undone`, `a rejected delete shows that the routine was restored`), `integration_test/firestore_routine_repository_test.dart` | Automated ✅ (integration local); manual emulator run passed 19.11.2026 |
+| QA-WP04-07 | Changes made offline appear immediately (offline cache) and sync after reconnecting. | integration, manual-emulator | Create or edit a routine in airplane mode, relaunch the app, then reconnect and check the Firestore emulator. | `integration_test/firestore_routine_repository_test.dart` (`routines pass the rules and save instantly while offline`) | Automated ✅ (local); manual emulator run passed 19.11.2026 |
 
 ## WP-05 — Workout logger & ghost values (Sprint 2)
 
@@ -120,11 +121,11 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | Test ID | Criterion | Type | How to run / perform | Covering test | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | QA-WP06-01 | Session snapshots are ordered by start time (newest first, ties by ID) and update listeners on save and delete. | unit | `flutter test test/data/workout_session_test.dart` | `workout_session_test.dart` (`fake CRUD, sorting…`, `each observer receives…`) | Automated ✅ |
-| QA-WP06-02 | A completed workout appears in History immediately, in chronological order. | widget, integration | — | — (`HistoryScreen` is a placeholder) | Not yet implemented — Sprint 2 |
-| QA-WP06-03 | Selecting an exercise shows weight/rep performance by date. | widget | — | — | Not yet implemented — Sprint 2 |
-| QA-WP06-04 | The 30-day history query from the local cache stays < 50 ms (M1 spike target). | performance | Profile build on the emulator with seeded data. | — (spike result: 36 ms median, profile mode; not an app test) | Not yet implemented — Sprint 2 |
+| QA-WP06-02 | A completed workout appears in History immediately, in chronological order (newest first, D-4). | widget, integration | `flutter test test/features/history/ test/features/logger/`; Android: `integration_test/m3_demo_test.dart` | `history_screen_test.dart` (`lists completed sessions newest first, without unfinished…`, `a session saved later appears without a restart`), `logger_screen_test.dart` (finish → View history), `workout_session_providers_test.dart` (`history keeps only finished sessions, newest first`) | Automated ✅; Android run in the M3 demo (local) |
+| QA-WP06-03 | Selecting an exercise shows weight/rep performance by date. | unit, widget | `flutter test test/features/history/` | `history_screen_test.dart` (`the by-exercise tab lists performed exercises and opens one`, `exercise history shows date-by-date max weight, best set and…`), `exercise_progress_test.dart` | Automated ✅ |
+| QA-WP06-04 | The 30-day history query from the local cache stays < 50 ms (M1 spike target). | performance | Profile build on the emulator or a device with seeded data. | — (spike result: 36 ms median, profile mode; not an app test) | Not yet implemented — device profile run pending (Sprint 3) |
 
-> **Open question for the Product Owner (WP-06):** the repository contract sorts **newest first**. The baseline wording "chronological order" can be read either way. This needs confirming before QA-WP06-02 is written.
+> **PO decision D-4 (WP-06, #21, 19.11.2026):** "chronological order" means **newest first**: sessions are ordered by `startedAt` descending, with the session ID breaking ties. QA-WP06-01 and QA-WP06-02 test this order.
 
 ## WP-07 — Plateau analyzer & AI explanation (Sprint 3)
 
@@ -167,7 +168,7 @@ These 10 datasets are the fixed inputs for QA-WP07-01. Each must become one unit
 | `TC-P09` | Stalled | Bodyweight stagnation | `0 kg × 12 × 3` → `0 × 12 × 3` → `0 × 11 × 3` | `true` | No increase in load or reps |
 | `TC-P10` | Irregular | Two exercises in one log | `0025` stalled for 3 sessions; `0033` progresses in weight | `0025: true`, `0033: false` | Each `exerciseId` is evaluated independently |
 
-> **Open question (TC-P09):** with volume defined as `weightKg × reps`, a bodyweight exercise always has volume 0. As written, the rule would flag it even if reps went from 12 to 15. Sprint 3 must decide whether bodyweight exercises use total reps as their volume. Then TC-P09 should get a "reps increase → `false`" sibling case.
+> **PO decision D-4 (TC-P09, #23, 19.11.2026):** for bodyweight exercises (every set `weightKg = 0`) the plateau rule uses **total reps** (Σ `reps`) as the volume. TC-P09 stays `true` (12 → 12 → 11 reps). In Sprint 3 it gets a sibling case where reps rise from 12 to 15, with the expected flag `false`.
 
 ---
 
@@ -231,3 +232,8 @@ Add one row per regression or acceptance run. "Results" lists pass/total per sui
 | 19.11.2026 | `feat/WP-05-active-logger` (code `aaf60bc`) | Çağatay Oruk | Suite 1 + US-09 Android integration | 1: 172/172; 3: logger 1/1 on API 36.1 (real device preferences, container restart, offline finish, History and server sync); format/analyze clean. Other integration suites, 2, 4 and M not rerun. | None observed in these runs; US-10 summary/ghost checks remain open. |
 | 19.11.2026 | `feat/WP-05-ghost-values` (based on `7f6890c`) | Çağatay Oruk | Suite 1 + US-10 Android profile acceptance | 1: 183/183; format/analyze clean. 3: ghost acceptance 1/1 on API 36.1; 60 cached sessions, 10 samples, median 56.783 ms (range 42.481–125.768 ms); offline finish/summary 366 ms. Explicit previous-set confirmation, cached History and server sync passed. Other integration suites, 2, 4 and M not rerun. | None observed in these runs. Timings cover native cache read + lookup and the separate finish UI action, not end-to-end navigation or all devices. |
 | 19.11.2026 | `feat/WP-07-gemini-proxy` (based on `648b34b`) | Çağatay Oruk | Suite 1 + US-14 Functions tests and local HTTP/Auth smoke | 1: 189/189; format/analyze clean. 4: 11/11, including real 4 s mocked-body deadline. HTTP smoke assertions passed (401 without token; 200 fallback with a real local Auth token); CLI script exited 0 but emulator shutdown timed out and wrapper exited 2. Suites 2, device integration and live Gemini latency not run. | No product failure observed in tested paths. Firebase CLI shutdown timeout is an environment limitation; live deployment and US-13/US-15 workflow remain unverified. |
+| 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-04: create, view, edit and delete a routine from the UI (Android API 36 + emulators) | 1: 189/189 · 3: routine 1/1 · M: 1/1 passed. Created "Push"/"Pull", edited "Push" → "Push2" (3 exercises), created and deleted "Temp"; the list and `users/{uid}/routines` matched (`qa-wp04-a.png`, `firestore-after-a.txt`). | None observed. |
+| 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-05: reorder routines and the exercises inside a routine from the UI | M: 1/1 passed. Routines dragged so "Pull" is first; server `order` Pull = 0, Push2 = 1. The exercise order inside "Push2" was changed in the editor and saved (no separate screenshot of the exercise order). | None observed. |
+| 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-06: changes saved instantly to Firestore under `users/{uid}/routines`; #45 rejected save/delete message | 3: routine 1/1 · M: 1/1 passed. Online writes visible in the Firestore emulator right after each action. Rejected save (emulator rule override): SnackBar "Could not save your routine on the server. Your change was undone." and the name back to "Pull" (`qa-wp04-c-rejected-save.png`). Rejected delete: "Offline" left the list, then SnackBar "Could not delete your routine on the server. It has been restored." and it came back (`qa-wp04-d1/d2`). Server unchanged both times (`firestore-after-c/d.txt`). | None observed. The rejection was forced with temporary in-memory emulator rules, not with a 16-exercise routine (the UI caps a routine at 15). |
+| 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-07: an offline change appears immediately, survives a restart and syncs after reconnecting | 3: routine 1/1 (offline save visible < 1 s) · M: 1/1 passed. Airplane mode on → saved "Offline": shown at once, absent on the server (`firestore-during-b.txt`). App swiped away and relaunched (PID 13846 → 14412), still offline: "Offline" still listed. Airplane mode off → document on the server with order 2 and 2 exercises (`firestore-after-b.txt`). | None observed. |
+| 19.11.2026 | `main` (`edc3c0b`) | Berat Kaan Akcan | M3 regression, suites 1, 2 & 4; checklist review | 1: 189/189 · 2: 4/4 (isolated local Firestore emulator) · 4: 11/11 · `dart analyze --fatal-infos` and format clean. 3 and M not rerun on this workstation (no Android emulator); see the Android rows above. | None observed. Open: QA-WP01-06 and QA-WP06-04 device timings. |
