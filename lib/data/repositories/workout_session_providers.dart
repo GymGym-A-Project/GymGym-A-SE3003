@@ -15,10 +15,20 @@ final workoutSessionRepositoryProvider = Provider<WorkoutSessionRepository?>((
   final uid = ref.watch(
     authStateProvider.select((auth) => auth.hasError ? null : auth.value?.id),
   );
-  return uid == null
-      ? null
-      : FirestoreWorkoutSessionRepository(ref.watch(firestoreProvider), uid);
+  if (uid == null) return null;
+  final repository = FirestoreWorkoutSessionRepository(
+    ref.watch(firestoreProvider),
+    uid,
+  );
+  ref.onDispose(repository.dispose);
+  return repository;
 });
+
+final workoutWriteFailuresProvider = StreamProvider<WorkoutWriteFailure>(
+  (ref) =>
+      ref.watch(workoutSessionRepositoryProvider)?.writeFailures ??
+      const Stream.empty(),
+);
 
 /// Live session list of the signed-in user, newest first, including sessions
 /// that are still in progress.

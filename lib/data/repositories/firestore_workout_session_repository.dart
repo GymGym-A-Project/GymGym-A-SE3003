@@ -14,6 +14,13 @@ class FirestoreWorkoutSessionRepository implements WorkoutSessionRepository {
     : _workouts = firestore.collection('users').doc(uid).collection('workouts');
 
   final CollectionReference<Map<String, dynamic>> _workouts;
+  final _failures = StreamController<WorkoutWriteFailure>.broadcast();
+
+  @override
+  Stream<WorkoutWriteFailure> get writeFailures => _failures.stream;
+
+  @override
+  void dispose() => unawaited(_failures.close());
 
   @override
   Stream<List<WorkoutSession>> watch() => _workouts
@@ -45,19 +52,32 @@ class FirestoreWorkoutSessionRepository implements WorkoutSessionRepository {
   }
 
   @override
-  Future<void> save(WorkoutSession session) async =>
-      _write(_workouts.doc(session.id).set(_toDocument(session)));
+  Future<void> save(WorkoutSession session) async => track(
+    WorkoutWriteOperation.save,
+    session.id,
+    _workouts.doc(session.id).set(_toDocument(session)),
+  );
 
   @override
-  Future<void> delete(String id) async => _write(_workouts.doc(id).delete());
+  Future<void> delete(String id) async =>
+      track(WorkoutWriteOperation.delete, id, _workouts.doc(id).delete());
 
   /// Firestore applies a write to the local cache and to [watch] at once, but
   /// its future completes only when the server confirms it. Waiting would block
   /// the UI for as long as the device is offline.
-  void _write(Future<void> confirmed) => unawaited(
-    confirmed.catchError(
-      (Object error) => debugPrint('Workout write rejected: $error'),
-    ),
+  @visibleForTesting
+  void track(
+    WorkoutWriteOperation operation,
+    String id,
+    Future<void> confirmed,
+  ) => unawaited(
+    confirmed.catchError((Object error) {
+      debugPrint('Workout write rejected: $error');
+      if (error is FirebaseException && error.code == 'unavailable') return;
+      if (!_failures.isClosed) {
+        _failures.add(WorkoutWriteFailure(operation, id));
+      }
+    }),
   );
 
   static Map<String, dynamic> _toDocument(WorkoutSession session) {

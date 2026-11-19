@@ -11,7 +11,11 @@ import 'routine_draft.dart';
 ///
 /// Search and chip state are local, so the library tab keeps its own filter.
 class ExercisePickerScreen extends ConsumerStatefulWidget {
-  const ExercisePickerScreen({super.key});
+  const ExercisePickerScreen({super.key, this.selection, this.onToggle});
+
+  /// Selection callbacks let the logger reuse search, filters and attribution.
+  final Set<String> Function(WidgetRef)? selection;
+  final Future<void> Function(WidgetRef, Exercise)? onToggle;
 
   @override
   ConsumerState<ExercisePickerScreen> createState() =>
@@ -22,7 +26,25 @@ class _ExercisePickerScreenState extends ConsumerState<ExercisePickerScreen> {
   MuscleFilter _muscle = MuscleFilter.all;
   String _query = '';
 
-  void _toggle(Exercise exercise) {
+  Future<void> _toggle(Exercise exercise) async {
+    if (widget.onToggle != null) {
+      try {
+        await widget.onToggle!(ref, exercise);
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                error is StateError
+                    ? error.message.toString()
+                    : 'Could not save your selection.',
+              ),
+            ),
+          );
+        }
+      }
+      return;
+    }
     final draft = ref.read(routineDraftProvider.notifier);
     if (ref.read(routineDraftProvider).contains(exercise.id)) {
       draft.remove(exercise.id);
@@ -42,7 +64,14 @@ class _ExercisePickerScreenState extends ConsumerState<ExercisePickerScreen> {
   @override
   Widget build(BuildContext context) {
     final catalog = ref.watch(exerciseCatalogProvider);
-    final selected = ref.watch(routineDraftProvider).items.length;
+    final selection =
+        widget.selection?.call(ref) ??
+        ref
+            .watch(routineDraftProvider)
+            .items
+            .map((item) => item.exercise.id)
+            .toSet();
+    final selected = selection.length;
     return Scaffold(
       appBar: AppBar(
         title: Text('Add exercises ($selected/$maxRoutineExercises)'),
@@ -80,6 +109,7 @@ class _ExercisePickerScreenState extends ConsumerState<ExercisePickerScreen> {
                   query: _query,
                 ),
                 onToggle: _toggle,
+                selectedIds: selection,
               ),
             ),
             if (exercises.isNotEmpty)
@@ -93,23 +123,27 @@ class _ExercisePickerScreenState extends ConsumerState<ExercisePickerScreen> {
   }
 }
 
-class _PickerList extends ConsumerWidget {
-  const _PickerList({required this.exercises, required this.onToggle});
+class _PickerList extends StatelessWidget {
+  const _PickerList({
+    required this.exercises,
+    required this.onToggle,
+    required this.selectedIds,
+  });
 
   final List<Exercise> exercises;
   final ValueChanged<Exercise> onToggle;
+  final Set<String> selectedIds;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     if (exercises.isEmpty) {
       return const Center(child: Text('No exercises match your search.'));
     }
-    final draft = ref.watch(routineDraftProvider);
     return ListView.builder(
       itemCount: exercises.length,
       itemBuilder: (context, index) {
         final exercise = exercises[index];
-        final selected = draft.contains(exercise.id);
+        final selected = selectedIds.contains(exercise.id);
         return ListTile(
           leading: ExerciseThumbnail(exercise.thumbPath),
           title: Text(exercise.name),
