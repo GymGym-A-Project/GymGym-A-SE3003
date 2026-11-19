@@ -9,6 +9,7 @@ import '../../data/repositories/routine_providers.dart';
 import '../../data/repositories/workout_session_providers.dart';
 import 'exercise_progress.dart';
 import 'history_format.dart';
+import '../../core/widgets/sign_out_button.dart';
 
 /// Completed workouts, newest first, and the exercises performed in them.
 class HistoryScreen extends ConsumerWidget {
@@ -22,6 +23,7 @@ class HistoryScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('History'),
+          actions: const [SignOutButton()],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Sessions'),

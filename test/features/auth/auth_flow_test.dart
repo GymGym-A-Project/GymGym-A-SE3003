@@ -64,7 +64,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(auth.currentUser, isNotNull);
-      await tester.tap(find.text('Sign out'));
+      await tester.tap(find.byTooltip('Sign out'));
       await tester.pumpAndSettle();
       expect(find.byType(AuthScreen), findsOneWidget);
       container.read(appRouterProvider).go(AppRoutes.history);
@@ -136,5 +136,35 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Passwords do not match.'), findsOneWidget);
     expect(auth.currentUser, isNull);
+  });
+  testWidgets('Continue with Google opens the app', (tester) async {
+    final auth = FakeAuthRepository(googleEmail: 'g@example.com');
+    await start(tester, auth);
+    await tester.ensureVisible(find.byKey(const ValueKey('auth-google')));
+    await tester.tap(find.byKey(const ValueKey('auth-google')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(auth.currentUser!.email, 'g@example.com');
+  });
+
+  testWidgets('closing the Google picker shows no error', (tester) async {
+    final auth = FakeAuthRepository();
+    await start(tester, auth);
+    await tester.ensureVisible(find.byKey(const ValueKey('auth-google')));
+    await tester.tap(find.byKey(const ValueKey('auth-google')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AuthScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('auth-message')), findsNothing);
+    expect(auth.currentUser, isNull);
+  });
+
+  testWidgets('the Google button is hidden while resetting a password', (
+    tester,
+  ) async {
+    await start(tester, FakeAuthRepository());
+    expect(find.text('Continue with Google'), findsOneWidget);
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue with Google'), findsNothing);
   });
 }

@@ -22,6 +22,7 @@ import 'active_workout.dart';
 import 'workout_draft.dart';
 import 'ghost_values.dart';
 import 'workout_summary.dart';
+import '../../core/widgets/sign_out_button.dart';
 
 class LoggerScreen extends ConsumerStatefulWidget {
   const LoggerScreen({super.key});
@@ -135,7 +136,10 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
     });
     final active = ref.watch(activeWorkoutProvider(uid));
     return Scaffold(
-      appBar: AppBar(title: const Text('Workout')),
+      appBar: AppBar(
+        title: const Text('Workout'),
+        actions: const [SignOutButton()],
+      ),
       body: active.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => EmptyState(

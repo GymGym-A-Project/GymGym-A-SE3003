@@ -67,24 +67,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           }
       }
     } on AuthFailure catch (error) {
-      if (mounted) {
-        setState(() {
-          _message = switch (error.code) {
-            'invalid-email' => 'Enter a valid email address.',
-            'weak-password' =>
-              'Choose a stronger password (at least 6 characters).',
-            'email-already-in-use' =>
-              'This email is already registered. Try signing in.',
-            'invalid-credential' || 'user-not-found' || 'wrong-password' =>
-              _mode == _Mode.reset
-                  ? 'If an account exists, a password reset email has been sent.'
-                  : 'Email or password is incorrect.',
-            'too-many-requests' => 'Too many attempts. Please try again later.',
-            'network-request-failed' => 'Check your connection and try again.',
-            _ => 'Unable to complete the request. Please try again.',
-          };
-        });
-      }
+      if (mounted) setState(() => _message = _failureMessage(error.code));
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -97,6 +80,45 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           _busy = false;
         });
       }
+    }
+  }
+
+  String? _failureMessage(String code) => switch (code) {
+    'invalid-email' => 'Enter a valid email address.',
+    'weak-password' => 'Choose a stronger password (at least 6 characters).',
+    'email-already-in-use' =>
+      'This email is already registered. Try signing in.',
+    'invalid-credential' || 'user-not-found' || 'wrong-password' =>
+      _mode == _Mode.reset
+          ? 'If an account exists, a password reset email has been sent.'
+          : 'Email or password is incorrect.',
+    'account-exists-with-different-credential' => 'This email already has a password account. Sign in with your email and password.',
+    AuthFailure.googleCanceled => null,
+    AuthFailure.googleFailed =>
+      'Google sign-in did not complete. Please try again.',
+    'too-many-requests' => 'Too many attempts. Please try again later.',
+    'network-request-failed' => 'Check your connection and try again.',
+    _ => 'Unable to complete the request. Please try again.',
+  };
+
+  Future<void> _signInWithGoogle() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+    } on AuthFailure catch (error) {
+      if (mounted) setState(() => _message = _failureMessage(error.code));
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _message = 'Unable to complete the request. Please try again.';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -236,6 +258,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               : () => _changeMode(_Mode.signIn),
                           child: const Text('Back to sign in'),
                         ),
+                      if (_mode != _Mode.reset) ...[
+                        Gap.vL,
+                        const _OrDivider(),
+                        Gap.vL,
+                        OutlinedButton.icon(
+                          key: const ValueKey('auth-google'),
+                          onPressed: _busy ? null : _signInWithGoogle,
+                          icon: const _GoogleMark(),
+                          label: const Text('Continue with Google'),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -288,4 +321,40 @@ class _Brand extends StatelessWidget {
       ],
     );
   }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GymColors.of(context);
+    return Row(
+      children: [
+        Expanded(child: Divider(color: colors.border)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.m),
+          child: Text(
+            'or',
+            style: AppText.body.copyWith(color: colors.textMuted),
+          ),
+        ),
+        Expanded(child: Divider(color: colors.border)),
+      ],
+    );
+  }
+}
+
+/// A plain "G" mark; the official logo asset is not bundled.
+class _GoogleMark extends StatelessWidget {
+  const _GoogleMark();
+
+  @override
+  Widget build(BuildContext context) => Text(
+    'G',
+    style: AppText.headline.copyWith(
+      color: GymColors.of(context).text,
+      fontWeight: FontWeight.w800,
+    ),
+  );
 }

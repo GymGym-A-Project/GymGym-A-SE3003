@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'auth_repository.dart';
+import 'google_id_tokens.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
-  FirebaseAuthRepository(this._auth);
+  FirebaseAuthRepository(this._auth, {GoogleIdTokens? google})
+    : _google = google ?? GoogleIdTokens();
   final FirebaseAuth _auth;
+  final GoogleIdTokens _google;
 
   AuthUser? _user(User? user) =>
       user == null ? null : AuthUser(id: user.uid, email: user.email);
@@ -46,5 +50,30 @@ class FirebaseAuthRepository implements AuthRepository {
       _run(() => _auth.sendPasswordResetEmail(email: email.trim()));
 
   @override
-  Future<void> signOut() => _run(_auth.signOut);
+  Future<void> signInWithGoogle() => _run(() async {
+    final String idToken;
+    try {
+      idToken = await _google.idToken();
+    } on GoogleSignInException catch (error) {
+      throw AuthFailure(
+        error.code == GoogleSignInExceptionCode.canceled
+            ? AuthFailure.googleCanceled
+            : AuthFailure.googleFailed,
+      );
+    }
+    await _auth.signInWithCredential(
+      GoogleAuthProvider.credential(idToken: idToken),
+    );
+  });
+
+  @override
+  Future<void> signOut() => _run(() async {
+    await _auth.signOut();
+    try {
+      await _google.signOut();
+    } on Object {
+      // The Firebase session is already closed; a stale Google choice only
+      // means the picker may preselect the last account.
+    }
+  });
 }
