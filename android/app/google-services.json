@@ -12,7 +12,28 @@
           "package_name": "com.gymgyma.gymgym_a"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "45354610270-8fvm43vnrgp04sgn8hvnmsd7iqp92ntc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gymgyma.gymgym_a",
+            "certificate_hash": "1b6287885e6d61fe774d50431710dc18e021bbcb"
+          }
+        },
+        {
+          "client_id": "45354610270-a1qbm8ner18le8ebimc47q494tog13qp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gymgyma.gymgym_a",
+            "certificate_hash": "1fcadd6f80b0f08426391c450c15282cacde96de"
+          }
+        },
+        {
+          "client_id": "45354610270-v5f51skrufs0c7mp6h2gm4ilf2o7v9ie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCtJY_gohvog8Atd_9laijp-pP-mpoS_z0"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "45354610270-v5f51skrufs0c7mp6h2gm4ilf2o7v9ie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
