@@ -5,7 +5,7 @@
 GymGym-A is a cross-platform mobile application built for amateur gym-goers to track their workouts with low friction, apply progressive overload using previous-session **ghost values**, and identify training plateaus via a deterministic 30-day rule engine paired with an on-demand AI explanation layer.
 
 - **Repository:** [https://github.com/GymGym-A-Project/GymGym-A-SE3003](https://github.com/GymGym-A-Project/GymGym-A-SE3003)
-- **Project Board:** [https://github.com/users/se-230717041/projects/1/views/1?layout_template=board](https://github.com/users/se-230717041/projects/1/views/1?layout_template=board)
+- **Project Board:** [https://github.com/orgs/GymGym-A-Project/projects/3](https://github.com/orgs/GymGym-A-Project/projects/3)
 
 ## Team GymGym-A
 
