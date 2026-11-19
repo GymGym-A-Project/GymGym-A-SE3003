@@ -28,12 +28,12 @@ This checklist turns each M2 acceptance criterion into one or more test cases. E
 
 **Test types:** `unit` · `widget` · `integration` (runs on an emulator against the Firebase Emulator Suite) · `Firestore rules` · `manual-emulator` · `performance`.
 
-**CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) has two jobs: `analyze-and-test` (`dart format`, `flutter analyze --fatal-infos`, `flutter test`) and `firestore-rules` (the Firestore rules tests against the Firestore emulator). The Cloud Functions tests and the integration test are **not** in CI and have to be run by hand (see [How to run tests](#how-to-run-tests)).
+**CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs `analyze-and-test` (format, fatal-info analysis and Flutter tests), `firestore-rules` (rules tests against the Firestore emulator), and `functions` (Node proxy tests). Device integration, HTTP emulator smoke tests and live Gemini latency measurements still run locally.
 
 ## Coverage summary
 
-WP-05 statuses were updated for US-09/US-10 on 19.11.2026; other WP rows retain
-their earlier review dates. This table is coverage, not a claim that all suites
+WP-05 statuses and the US-14 proxy rows of WP-07 were updated on 19.11.2026;
+other WP rows retain their earlier review dates. This table is coverage, not a claim that all suites
 were rerun together. See the dated test-run log below.
 
 | WP | Sprint | Test cases | Automated ✅ | Manual | Not yet implemented |
@@ -44,9 +44,9 @@ were rerun together. See the dated test-run log below.
 | WP-04 | 1 | 7 | 3 | 0 | 4 |
 | WP-05 | 2 | 6 | 6 | 0 | 0 |
 | WP-06 | 2 | 4 | 1 | 0 | 3 |
-| WP-07 | 3 | 9 | 3 | 0 | 6 |
+| WP-07 | 3 | 9 | 4 | 0 | 5 |
 | WP-08 | 4 | 3 | 0 | 0 | 3 |
-| **Total** | | **52** | **30** | **4** | **18** |
+| **Total** | | **52** | **31** | **4** | **17** |
 
 All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 passing, the Firestore rules tests gave 4/4 passing (locally and in the CI `firestore-rules` job), and `npm test` in `functions/` gave 5/5 passing. The integration test was **not** re-run because it needs a running Android emulator. Its status is based on PR #40 and must be confirmed in the first M3 test run.
 
@@ -132,13 +132,13 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | QA-WP07-01 | Plateau rule: an exercise is flagged when neither its max weight nor its total volume increases over ≥ 3 sessions in the last 30 days. Validated against the 10 synthetic datasets `TC-P01`–`TC-P10` (progressing, stalled, deload, irregular; assumption **A-05**). | unit | — | — (see [dataset table](#synthetic-30-day-plateau-datasets-wp-07--a-05)) | Not yet implemented — Sprint 3 |
 | QA-WP07-02 | The AI explanation and 2–3 library-verified alternatives arrive in **< 5 s** end to end (app → proxy → Gemini → app). | performance, manual-emulator | Profile build with a real `GEMINI_API_KEY` in the Functions emulator; time from tap to rendered result, 10 runs. | — (spike measured 1.8 s for the proxy alone) | Not yet implemented — Sprint 3 |
-| QA-WP07-03 | Hallucinated exercise IDs are discarded by the 152-ID whitelist. | unit | `cd functions && npm test` | `functions/test/index.test.js` (`whitelist keeps only the 152 known IDs`, `IDs returned by Gemini outside the list are dropped`) | Automated ✅ (local) |
-| QA-WP07-04 | The proxy whitelist (`functions/exercise_ids.json`) contains exactly the 152 IDs in `assets/data/exercises.json`. | unit | — | — (checked by hand on 28.10.2026: identical sets of 152 IDs; no test keeps them in sync) | Not yet implemented — Sprint 3 |
-| QA-WP07-05 | The proxy aborts after **4 s** and returns a fallback, both on timeout and on an upstream error or missing key. | unit | `cd functions && npm test` | `functions/test/index.test.js` (`falls back after the 4 s timeout`). The missing-key and HTTP-error paths were checked only by hand in the spike. | Automated ✅ (local; timeout path only) |
+| QA-WP07-03 | Hallucinated exercise IDs are discarded by the 152-ID whitelist. | unit | `cd functions && npm test` | `index.test.js`: unknown, unrequested, current and duplicate IDs filtered; Flutter response resolves local names | Automated ✅ (Functions CI) |
+| QA-WP07-04 | The proxy whitelist (`functions/exercise_ids.json`) contains exactly the 152 IDs in `assets/data/exercises.json`. | unit | `cd functions && npm test` | `index.test.js`: exact 152-ID catalog parity and uniqueness | Automated ✅ (Functions CI) |
+| QA-WP07-05 | The proxy aborts after **4 s** and returns a fallback, both on timeout and on an upstream error or missing key. | unit | `cd functions && npm test` | `index.test.js`: stuck body reader, missing key, HTTP errors, invalid/blocked/truncated output | Automated ✅ (Functions CI); <5 s live end-to-end latency remains QA-WP07-02 |
 | QA-WP07-06 | Offline or proxy failure: the app still shows the rule-based plateau result plus alternatives taken from the local catalog. | widget, integration | — | — | Not yet implemented — Sprint 3 |
-| QA-WP07-07 | PII (name, email, uid) is stripped before the proxy builds the prompt (risk **R-04**). | unit | `cd functions && npm test` | `functions/test/index.test.js` (`anonymize drops uid, name and email`, `prompt contains no personal data`) | Automated ✅ (local) |
-| QA-WP07-08 | The app client sends no PII in the request body, including inside nested objects. | unit | — | — (`anonymize()` strips **top-level** keys only, so nested PII would pass through) | Not yet implemented — Sprint 3 |
-| QA-WP07-09 | The "Advisory only — not medical advice" notice is shown with every AI/plateau result. | widget | — | — (`AnalyzerScreen` is a placeholder) | Not yet implemented — Sprint 3 |
+| QA-WP07-07 | PII (name, email, uid) is stripped before the proxy builds the prompt (risk **R-04**). | unit | `cd functions && npm test` | `index.test.js`: allowlist projection drops nested PII, unknown strings and metadata; UID authorizes HTTP only | Automated ✅ (Functions CI) |
+| QA-WP07-08 | The app client sends no PII in the request body, including inside nested objects. | unit, integration | `flutter test test/features/analyzer/` | `plateau_advice_test.dart`: typed anonymous request projection | Partial — request builder tested; US-15 HTTP/analyzer integration remains open |
+| QA-WP07-09 | The "Advisory only - not medical or coaching advice" notice is shown with every AI/plateau result. | widget | `flutter test test/features/analyzer/` | `plateau_advice_test.dart`: AI/fallback cards and analyzer entry always display app-owned notice | Partial — reusable result card tested; full result workflow remains US-13/US-15 |
 
 ## WP-08 — Calendar, Google Sign-In & starter routines (Sprint 4)
 
@@ -230,3 +230,4 @@ Add one row per regression or acceptance run. "Results" lists pass/total per sui
 | 28.10.2026 | `docs/qa-checklist-dod` (based on `4d44745`) | Berat Kaan Akcan | Suites 1, 2 & 4 (baseline, before M3) | 1: 53/53 · 2: 4/4 · 4: 5/5 · 3, M: not run (no Android emulator) | — |
 | 19.11.2026 | `feat/WP-05-active-logger` (code `aaf60bc`) | Çağatay Oruk | Suite 1 + US-09 Android integration | 1: 172/172; 3: logger 1/1 on API 36.1 (real device preferences, container restart, offline finish, History and server sync); format/analyze clean. Other integration suites, 2, 4 and M not rerun. | None observed in these runs; US-10 summary/ghost checks remain open. |
 | 19.11.2026 | `feat/WP-05-ghost-values` (based on `7f6890c`) | Çağatay Oruk | Suite 1 + US-10 Android profile acceptance | 1: 183/183; format/analyze clean. 3: ghost acceptance 1/1 on API 36.1; 60 cached sessions, 10 samples, median 56.783 ms (range 42.481–125.768 ms); offline finish/summary 366 ms. Explicit previous-set confirmation, cached History and server sync passed. Other integration suites, 2, 4 and M not rerun. | None observed in these runs. Timings cover native cache read + lookup and the separate finish UI action, not end-to-end navigation or all devices. |
+| 19.11.2026 | `feat/WP-07-gemini-proxy` (based on `648b34b`) | Çağatay Oruk | Suite 1 + US-14 Functions tests and local HTTP/Auth smoke | 1: 189/189; format/analyze clean. 4: 11/11, including real 4 s mocked-body deadline. HTTP smoke assertions passed (401 without token; 200 fallback with a real local Auth token); CLI script exited 0 but emulator shutdown timed out and wrapper exited 2. Suites 2, device integration and live Gemini latency not run. | No product failure observed in tested paths. Firebase CLI shutdown timeout is an environment limitation; live deployment and US-13/US-15 workflow remain unverified. |

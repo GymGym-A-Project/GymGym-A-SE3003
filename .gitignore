@@ -25,6 +25,8 @@ firestore-debug.log
 firebase-debug.log
 ui-debug.log
 functions/.env
+functions/.env.*
+functions/.secret.local
 functions/node_modules/
 
 # Android / Gradle local files & artifacts

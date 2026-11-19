@@ -83,4 +83,5 @@ CI runs `dart format`, `flutter analyze --fatal-infos`, `flutter test` and the F
 - [Definition of Done (`docs/definition-of-done.md`)](docs/definition-of-done.md)
 - [QA Test Checklist (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md)
 - [M3 Status Summary & Sprint 2 Priorities (`docs/m3-status-summary.md`)](docs/m3-status-summary.md)
+- [Plateau proxy API, privacy boundary and deployment handoff (`docs/plateau-proxy.md`)](docs/plateau-proxy.md)
 - [Submitted Milestone Reports (`docs/reports/`)](docs/reports/)

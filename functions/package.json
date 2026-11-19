@@ -1,7 +1,7 @@
 {
   "name": "gymgym-a-functions",
   "private": true,
-  "description": "Week 3 spike: Gemini proxy for the plateau analyzer",
+  "description": "Authenticated Gemini proxy for the plateau analyzer",
   "main": "index.js",
   "engines": {
     "node": "22"

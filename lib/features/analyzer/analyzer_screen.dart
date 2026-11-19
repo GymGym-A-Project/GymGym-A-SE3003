@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 
-import '../../core/widgets/placeholder_screen.dart';
+import 'plateau_advice.dart';
 
 class AnalyzerScreen extends StatelessWidget {
   const AnalyzerScreen({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const PlaceholderScreen(title: 'Analyzer');
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Analyzer')),
+    body: const Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(plateauDisclaimer),
+          SizedBox(height: 16),
+          Text('Plateau analysis is not available yet.'),
+        ],
+      ),
+    ),
+  );
 }
