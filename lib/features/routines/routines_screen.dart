@@ -7,6 +7,7 @@ import '../../data/models/routine.dart';
 import '../../data/repositories/routine_providers.dart';
 import '../../data/repositories/routine_repository.dart';
 import 'routine_order.dart';
+import '../../core/widgets/sign_out_button.dart';
 
 class RoutinesScreen extends ConsumerWidget {
   const RoutinesScreen({super.key});
@@ -22,7 +23,10 @@ class RoutinesScreen extends ConsumerWidget {
       }
     });
     return Scaffold(
-      appBar: AppBar(title: const Text('Routines')),
+      appBar: AppBar(
+        title: const Text('Routines'),
+        actions: const [SignOutButton()],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go(AppRoutes.routineNew),
         icon: const Icon(Icons.add),

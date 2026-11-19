@@ -64,7 +64,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(auth.currentUser, isNotNull);
-      await tester.tap(find.text('Sign out'));
+      await tester.tap(find.byTooltip('Sign out'));
       await tester.pumpAndSettle();
       expect(find.byType(AuthScreen), findsOneWidget);
       container.read(appRouterProvider).go(AppRoutes.history);

@@ -10,6 +10,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../data/exercise_catalog.dart';
 import 'exercise_filter.dart';
 import 'exercise_widgets.dart';
+import '../../core/widgets/sign_out_button.dart';
 
 class ExercisesScreen extends ConsumerWidget {
   const ExercisesScreen({super.key});
@@ -18,7 +19,10 @@ class ExercisesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final catalog = ref.watch(exerciseCatalogProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Exercises')),
+      appBar: AppBar(
+        title: const Text('Exercises'),
+        actions: const [SignOutButton()],
+      ),
       body: catalog.when(
         data: (exercises) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
