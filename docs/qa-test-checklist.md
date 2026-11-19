@@ -2,7 +2,7 @@
 
 - **Maintained by:** Berat Kaan Akcan (`230717052` — Quality and Test Lead)
 - **Baseline:** M2 Project Plan Baseline Report (submitted 01.11.2026), acceptance criteria per Work Package
-- **Last reviewed:** 28.10.2026, against `main` @ `4d44745`
+- **Last reviewed:** 19.11.2026, against `main` @ `edc3c0b` (M3 review)
 - **Related:** [Definition of Done (`docs/definition-of-done.md`)](definition-of-done.md) · [Firebase, Auth & Domain Contract (`docs/firebase-auth-and-domain.md`)](firebase-auth-and-domain.md) · [Week 3 Spike Summary (`docs/spike-summary.md`)](spike-summary.md)
 
 This checklist turns each M2 acceptance criterion into one or more test cases. Each row says how the case is checked and whether that check exists today. It is the reference for DoD item **(b)** (emulator acceptance) and item **(d)** (tests pass).
@@ -32,23 +32,24 @@ This checklist turns each M2 acceptance criterion into one or more test cases. E
 
 ## Coverage summary
 
-WP-05 statuses and the US-14 proxy rows of WP-07 were updated on 19.11.2026;
-other WP rows retain their earlier review dates. This table is coverage, not a claim that all suites
-were rerun together. See the dated test-run log below.
+All rows were reviewed for M3 on 19.11.2026 against `main` @ `edc3c0b`. WP-04 and WP-06 rows now
+point to the tests merged in PRs #43, #44, #48, #49 and #50; the WP-05 and US-14 rows were updated by
+the logger and proxy PRs (#51, #52, #53). This table is coverage. Which suites were rerun, and when,
+is recorded in the dated test-run log below.
 
 | WP | Sprint | Test cases | Automated ✅ | Manual | Not yet implemented |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | WP-01 | 1 | 8 | 5 | 1 | 2 |
 | WP-02 | 1 | 8 | 6 | 2 | 0 |
 | WP-03 | 1 | 7 | 6 | 1 | 0 |
-| WP-04 | 1 | 7 | 3 | 0 | 4 |
+| WP-04 | 1 | 7 | 7 | 0 | 0 |
 | WP-05 | 2 | 6 | 6 | 0 | 0 |
-| WP-06 | 2 | 4 | 1 | 0 | 3 |
+| WP-06 | 2 | 4 | 3 | 0 | 1 |
 | WP-07 | 3 | 9 | 4 | 0 | 5 |
 | WP-08 | 4 | 3 | 0 | 0 | 3 |
-| **Total** | | **52** | **31** | **4** | **17** |
+| **Total** | | **52** | **37** | **4** | **11** |
 
-All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 passing, the Firestore rules tests gave 4/4 passing (locally and in the CI `firestore-rules` job), and `npm test` in `functions/` gave 5/5 passing. The integration test was **not** re-run because it needs a running Android emulator. Its status is based on PR #40 and must be confirmed in the first M3 test run.
+M3 regression on 19.11.2026 (`main` @ `edc3c0b`): `flutter test` 189/189, Firestore rules tests 4/4 and `npm test` in `functions/` 11/11 passing. The Android integration suites were run on the emulator by Doğukan Direksiz (routine repository, 1/1) and Çağatay Oruk (logger, ghost values and the M3 demo); the QA workstation has no Android emulator. The 4 manual WP-04 rows passed on 19.11.2026. Details are in the [test-run log](#test-run-log-m3).
 
 ---
 
@@ -235,3 +236,4 @@ Add one row per regression or acceptance run. "Results" lists pass/total per sui
 | 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-05: reorder routines and the exercises inside a routine from the UI | M: 1/1 passed. Routines dragged so "Pull" is first; server `order` Pull = 0, Push2 = 1. The exercise order inside "Push2" was changed in the editor and saved (no separate screenshot of the exercise order). | None observed. |
 | 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-06: changes saved instantly to Firestore under `users/{uid}/routines`; #45 rejected save/delete message | 3: routine 1/1 · M: 1/1 passed. Online writes visible in the Firestore emulator right after each action. Rejected save (emulator rule override): SnackBar "Could not save your routine on the server. Your change was undone." and the name back to "Pull" (`qa-wp04-c-rejected-save.png`). Rejected delete: "Offline" left the list, then SnackBar "Could not delete your routine on the server. It has been restored." and it came back (`qa-wp04-d1/d2`). Server unchanged both times (`firestore-after-c/d.txt`). | None observed. The rejection was forced with temporary in-memory emulator rules, not with a 16-exercise routine (the UI caps a routine at 15). |
 | 19.11.2026 | `main` (`9887005`) | Doğukan Direksiz | QA-WP04-07: an offline change appears immediately, survives a restart and syncs after reconnecting | 3: routine 1/1 (offline save visible < 1 s) · M: 1/1 passed. Airplane mode on → saved "Offline": shown at once, absent on the server (`firestore-during-b.txt`). App swiped away and relaunched (PID 13846 → 14412), still offline: "Offline" still listed. Airplane mode off → document on the server with order 2 and 2 exercises (`firestore-after-b.txt`). | None observed. |
+| 19.11.2026 | `main` (`edc3c0b`) | Berat Kaan Akcan | M3 regression, suites 1, 2 & 4; checklist review | 1: 189/189 · 2: 4/4 (isolated local Firestore emulator) · 4: 11/11 · `dart analyze --fatal-infos` and format clean. 3 and M not rerun on this workstation (no Android emulator); see the Android rows above. | None observed. Open: QA-WP01-06 and QA-WP06-04 device timings. |
