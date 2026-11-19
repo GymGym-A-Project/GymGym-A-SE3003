@@ -55,6 +55,9 @@ class FakeWorkoutSessionRepository implements WorkoutSessionRepository {
   Future<WorkoutSession?> get(String id) async => _sessions[id];
 
   @override
+  Future<List<WorkoutSession>> getCached() async => _snapshot();
+
+  @override
   Future<void> save(WorkoutSession session) async {
     _sessions[session.id] = session;
     _publish();

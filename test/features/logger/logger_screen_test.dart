@@ -97,6 +97,9 @@ void main() {
     final saved = (await sessions.watch().first).single;
     expect(saved.totalVolume, 480);
     expect(saved.finishedAt, isNotNull);
+    expect(find.text('Workout complete'), findsOneWidget);
+    await tester.tap(find.text('View history'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Push day'), findsWidgets);
     expect(find.text('No completed workouts yet'), findsNothing);
   });
@@ -171,17 +174,44 @@ void main() {
     await pumpLogger(tester, sessions: sessions, size: const Size(320, 640));
     await tester.tap(find.byKey(const ValueKey('start-workout')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('finish-workout')));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('finish-workout')),
+      150,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('workout-inputs')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.byKey(const ValueKey('finish-workout')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('weight-1-0')));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('weight-1-0')),
+      -150,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('workout-inputs')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.enterText(find.byKey(const ValueKey('weight-1-0')), '0');
     await tester.enterText(find.byKey(const ValueKey('reps-1-0')), '12');
     tester.testTextInput.hide();
-    await tester.ensureVisible(find.byKey(const ValueKey('finish-workout')));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('finish-workout')),
+      150,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('workout-inputs')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.byKey(const ValueKey('finish-workout')));
     await tester.pumpAndSettle();
     expect(find.text('No completed workouts yet'), findsNothing);

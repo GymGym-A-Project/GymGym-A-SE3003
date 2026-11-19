@@ -91,6 +91,10 @@ void main() {
         );
         expect(cached.data()!['totalVolume'], 480);
         expect(cached.data()!['finishedAt'], isA<Timestamp>());
+        expect(find.text('Workout complete'), findsOneWidget);
+        expect(find.text('480 kg'), findsOneWidget);
+        await tester.tap(find.text('View history'));
+        await tester.pumpAndSettle();
         expect(find.textContaining('Logger acceptance'), findsWidgets);
         expect(find.text('No completed workouts yet'), findsNothing);
 

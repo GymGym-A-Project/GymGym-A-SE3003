@@ -17,6 +17,9 @@ abstract interface class WorkoutSessionRepository {
 
   /// Current snapshot followed by updates, newest startedAt first, then id.
   Stream<List<WorkoutSession>> watch();
+
+  /// Device cache only; must not wait for a network request.
+  Future<List<WorkoutSession>> getCached();
   Future<WorkoutSession?> get(String id);
   Future<void> save(WorkoutSession session);
   Future<void> delete(String id);

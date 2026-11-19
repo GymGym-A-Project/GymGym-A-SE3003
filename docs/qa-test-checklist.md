@@ -32,17 +32,21 @@ This checklist turns each M2 acceptance criterion into one or more test cases. E
 
 ## Coverage summary
 
+WP-05 statuses were updated for US-09/US-10 on 19.11.2026; other WP rows retain
+their earlier review dates. This table is coverage, not a claim that all suites
+were rerun together. See the dated test-run log below.
+
 | WP | Sprint | Test cases | Automated ✅ | Manual | Not yet implemented |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | WP-01 | 1 | 8 | 5 | 1 | 2 |
 | WP-02 | 1 | 8 | 6 | 2 | 0 |
 | WP-03 | 1 | 7 | 6 | 1 | 0 |
 | WP-04 | 1 | 7 | 3 | 0 | 4 |
-| WP-05 | 2 | 6 | 2 | 0 | 4 |
+| WP-05 | 2 | 6 | 6 | 0 | 0 |
 | WP-06 | 2 | 4 | 1 | 0 | 3 |
 | WP-07 | 3 | 9 | 3 | 0 | 6 |
 | WP-08 | 4 | 3 | 0 | 0 | 3 |
-| **Total** | | **52** | **26** | **4** | **22** |
+| **Total** | | **52** | **30** | **4** | **18** |
 
 All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 passing, the Firestore rules tests gave 4/4 passing (locally and in the CI `firestore-rules` job), and `npm test` in `functions/` gave 5/5 passing. The integration test was **not** re-run because it needs a running Android emulator. Its status is based on PR #40 and must be confirmed in the first M3 test run.
 
@@ -106,10 +110,10 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | QA-WP05-01 | A set accepts finite `weightKg >= 0` (bodyweight = 0) and integer `reps > 0`; session total volume is derived, never trusted from JSON. | unit | `flutter test test/data/workout_session_test.dart` | `test/data/workout_session_test.dart` | Automated ✅ |
 | QA-WP05-02 | A session has 1–15 distinct exercises, and its finish time is not before its start time (model and rules). | unit, Firestore rules | as above, plus the Firestore rules tests | `workout_session_test.dart` (`session validates time range and exercise count and ids`), `firestore.rules.test.js` (`workout timestamps…`) | Automated ✅ |
-| QA-WP05-03 | Ghost values from the last **completed** session are pre-filled faintly in **< 200 ms** after starting a workout. | widget, performance | — | — (Week 3 spike measured a 10.5 ms median cache read in `spike/firestore_bench`; this is not an app test) | Not yet implemented — Sprint 2 |
+| QA-WP05-03 | Last **completed** sets per exercise appear as faint hints; blank actual inputs remain invalid. Native cache read + lookup median target **< 200 ms**, excluding navigation. | unit, widget, performance | Logger unit/widget suite; native profile command in `docs/workout-logger.md` | `ghost_values_test.dart`, `ghost_values_screen_test.dart`, `integration_test/ghost_values_test.dart` | Automated ✅; native profile run is local, not CI; see test-run log |
 | QA-WP05-04 | User can add and remove exercises during an active workout. | unit, widget | `flutter test test/features/logger/` | `active_workout_test.dart` (1–15 distinct exercises), `logger_screen_test.dart` (shared picker adds/removes without changing the routine) | Automated ✅ (unit/widget); Android acceptance tracked in the US-09 PR |
-| QA-WP05-05 | On finish, a timestamped session is saved and a summary of total volume and set count is shown. | widget, integration | `flutter test test/features/logger/`; Android command in `docs/workout-logger.md` | `logger_screen_test.dart` (finish appears in History), `workout_logger_test.dart` (device restore, offline finish and server sync) | Partial — US-09 saves the session; the dedicated volume/set summary remains US-10 (#20) |
-| QA-WP05-06 | Stress test (assumption **A-01**): with 60 simulated completed sessions, ghost-value pre-fill stays < 200 ms and saving a session does not slow down noticeably. | performance | Seed 60 sessions into the Firestore emulator, then measure the pre-fill time in a profile build. | — | Not yet implemented — Sprint 2 |
+| QA-WP05-05 | On finish, a timestamped session is saved and a summary of total volume and set count is shown. | widget, integration | `flutter test test/features/logger/`; Android command in `docs/workout-logger.md` | `workout_summary_test.dart`, `ghost_values_screen_test.dart`, `workout_logger_test.dart`, `integration_test/ghost_values_test.dart` (offline summary and server sync) | Automated ✅; native integration is local, not CI |
+| QA-WP05-06 | Stress test (assumption **A-01**): with 60 completed sessions, native cache read + lookup median stays < 200 ms and offline finish/summary stays < 1 s. | performance, integration | Profile command in `docs/workout-logger.md`; ten lookup samples with networking disabled | `integration_test/ghost_values_test.dart`; measures cache + lookup separately from navigation/animations | Automated ✅ (local); see test-run log for emulator results and measurement scope |
 
 ## WP-06 — Workout history (Sprint 2)
 
@@ -225,4 +229,4 @@ Add one row per regression or acceptance run. "Results" lists pass/total per sui
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 28.10.2026 | `docs/qa-checklist-dod` (based on `4d44745`) | Berat Kaan Akcan | Suites 1, 2 & 4 (baseline, before M3) | 1: 53/53 · 2: 4/4 · 4: 5/5 · 3, M: not run (no Android emulator) | — |
 | 19.11.2026 | `feat/WP-05-active-logger` (code `aaf60bc`) | Çağatay Oruk | Suite 1 + US-09 Android integration | 1: 172/172; 3: logger 1/1 on API 36.1 (real device preferences, container restart, offline finish, History and server sync); format/analyze clean. Other integration suites, 2, 4 and M not rerun. | None observed in these runs; US-10 summary/ghost checks remain open. |
-| | | | | | |
+| 19.11.2026 | `feat/WP-05-ghost-values` (based on `7f6890c`) | Çağatay Oruk | Suite 1 + US-10 Android profile acceptance | 1: 183/183; format/analyze clean. 3: ghost acceptance 1/1 on API 36.1; 60 cached sessions, 10 samples, median 56.783 ms (range 42.481–125.768 ms); offline finish/summary 366 ms. Explicit previous-set confirmation, cached History and server sync passed. Other integration suites, 2, 4 and M not rerun. | None observed in these runs. Timings cover native cache read + lookup and the separate finish UI action, not end-to-end navigation or all devices. |
