@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymgym_a/data/models/set_entry.dart';
 import 'package:gymgym_a/data/models/workout_session.dart';
 import 'package:gymgym_a/data/repositories/firestore_workout_session_repository.dart';
+import 'package:gymgym_a/data/repositories/workout_session_repository.dart';
 
 final _startedAt = DateTime.utc(2026, 11, 10, 18, 0, 5, 250);
 final _finishedAt = DateTime.utc(2026, 11, 10, 19, 2, 30);
@@ -41,6 +42,46 @@ void main() {
     firestore = FakeFirebaseFirestore();
     repository = FirestoreWorkoutSessionRepository(firestore, 'user-a');
   });
+
+  tearDown(() => repository.dispose());
+
+  test(
+    'server rejection emits a failure without blocking local writes',
+    () async {
+      final failure = repository.writeFailures.first;
+      repository.track(
+        WorkoutWriteOperation.save,
+        'rejected',
+        Future<void>.error(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'permission-denied',
+          ),
+        ),
+      );
+      final event = await failure;
+      expect(event.sessionId, 'rejected');
+      expect(event.operation, WorkoutWriteOperation.save);
+    },
+  );
+
+  test(
+    'offline unavailability is not reported as a rejected workout',
+    () async {
+      final failures = <WorkoutWriteFailure>[];
+      final subscription = repository.writeFailures.listen(failures.add);
+      repository.track(
+        WorkoutWriteOperation.save,
+        'pending',
+        Future<void>.error(
+          FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(failures, isEmpty);
+      await subscription.cancel();
+    },
+  );
 
   test(
     'save and get round trip every field in exercise and set order',

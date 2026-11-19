@@ -34,7 +34,13 @@ Future<void> initializeFirebase() async {
         : isAndroid
         ? '10.0.2.2'
         : '127.0.0.1';
-    firestore.useFirestoreEmulator(host, 8080);
-    await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+    // The host above is already platform-aware. Preserve explicit localhost
+    // overrides used with adb reverse instead of mapping them a second time.
+    firestore.useFirestoreEmulator(host, 8080, automaticHostMapping: false);
+    await FirebaseAuth.instance.useAuthEmulator(
+      host,
+      9099,
+      automaticHostMapping: false,
+    );
   }
 }

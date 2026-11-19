@@ -11,6 +11,13 @@ class FakeWorkoutSessionRepository implements WorkoutSessionRepository {
   }
 
   final Map<String, WorkoutSession> _sessions = {};
+  final _failures = StreamController<WorkoutWriteFailure>.broadcast();
+
+  @override
+  Stream<WorkoutWriteFailure> get writeFailures => _failures.stream;
+
+  @override
+  void dispose() => unawaited(_failures.close());
   final Set<StreamController<List<WorkoutSession>>> _listeners = {};
 
   List<WorkoutSession> _snapshot() {
