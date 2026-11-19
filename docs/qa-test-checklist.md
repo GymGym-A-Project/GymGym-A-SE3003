@@ -107,8 +107,8 @@ All "Automated ✅" rows were re-run on 28.10.2026: `flutter test` gave 53/53 pa
 | QA-WP05-01 | A set accepts finite `weightKg >= 0` (bodyweight = 0) and integer `reps > 0`; session total volume is derived, never trusted from JSON. | unit | `flutter test test/data/workout_session_test.dart` | `test/data/workout_session_test.dart` | Automated ✅ |
 | QA-WP05-02 | A session has 1–15 distinct exercises, and its finish time is not before its start time (model and rules). | unit, Firestore rules | as above, plus the Firestore rules tests | `workout_session_test.dart` (`session validates time range and exercise count and ids`), `firestore.rules.test.js` (`workout timestamps…`) | Automated ✅ |
 | QA-WP05-03 | Ghost values from the last **completed** session are pre-filled faintly in **< 200 ms** after starting a workout. | widget, performance | — | — (Week 3 spike measured a 10.5 ms median cache read in `spike/firestore_bench`; this is not an app test) | Not yet implemented — Sprint 2 |
-| QA-WP05-04 | User can add and remove exercises during an active workout. | widget | — | — (`LoggerScreen` is a placeholder) | Not yet implemented — Sprint 2 |
-| QA-WP05-05 | On finish, a timestamped session is saved and a summary of total volume and set count is shown. | widget, integration | — | — | Not yet implemented — Sprint 2 |
+| QA-WP05-04 | User can add and remove exercises during an active workout. | unit, widget | `flutter test test/features/logger/` | `active_workout_test.dart` (1–15 distinct exercises), `logger_screen_test.dart` (shared picker adds/removes without changing the routine) | Automated ✅ (unit/widget); Android acceptance tracked in the US-09 PR |
+| QA-WP05-05 | On finish, a timestamped session is saved and a summary of total volume and set count is shown. | widget, integration | `flutter test test/features/logger/`; Android command in `docs/workout-logger.md` | `logger_screen_test.dart` (finish appears in History), `workout_logger_test.dart` (device restore, offline finish and server sync) | Partial — US-09 saves the session; the dedicated volume/set summary remains US-10 (#20) |
 | QA-WP05-06 | Stress test (assumption **A-01**): with 60 simulated completed sessions, ghost-value pre-fill stays < 200 ms and saving a session does not slow down noticeably. | performance | Seed 60 sessions into the Firestore emulator, then measure the pre-fill time in a profile build. | — | Not yet implemented — Sprint 2 |
 
 ## WP-06 — Workout history (Sprint 2)
@@ -205,7 +205,8 @@ npx --yes firebase-tools@14.20.0 emulators:exec --only firestore --project demo-
 **3. Integration test with the Firebase emulators** (needs a running Android emulator; it refuses to run against a production project):
 
 ```bash
-firebase emulators:exec --only auth,firestore --project demo-gymgym "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
+firebase emulators:exec --only "auth,firestore" --project gymgym-a "flutter test integration_test/firebase_auth_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
+firebase emulators:exec --only "auth,firestore" --project gymgym-a "flutter test integration_test/workout_logger_test.dart -d emulator-5554 --dart-define=USE_FIREBASE_EMULATORS=true"
 ```
 
 **4. Cloud Functions proxy tests** (`functions/test/`; whitelist, PII and timeout; takes about 5 s because of the timeout test):
@@ -214,7 +215,7 @@ firebase emulators:exec --only auth,firestore --project demo-gymgym "flutter tes
 cd functions && npm ci && npm test
 ```
 
-To run the app against the emulators by hand for manual checks: `firebase emulators:start --only auth,firestore --project demo-gymgym`, then `flutter run --dart-define=USE_FIREBASE_EMULATORS=true`.
+To run the Android app against the emulators by hand for manual checks: `firebase emulators:start --only "auth,firestore" --project gymgym-a`, then `flutter run --dart-define=USE_FIREBASE_EMULATORS=true`. Stop standalone services before using `emulators:exec`; see `docs/workout-logger.md` for the US-09 acceptance flow.
 
 ## Test-run log (M3)
 
@@ -223,5 +224,5 @@ Add one row per regression or acceptance run. "Results" lists pass/total per sui
 | Date | Build / commit | Tester | Scope | Results | Defects (severity) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 28.10.2026 | `docs/qa-checklist-dod` (based on `4d44745`) | Berat Kaan Akcan | Suites 1, 2 & 4 (baseline, before M3) | 1: 53/53 · 2: 4/4 · 4: 5/5 · 3, M: not run (no Android emulator) | — |
-| | | | | | |
+| 19.11.2026 | `feat/WP-05-active-logger` (code `aaf60bc`) | Çağatay Oruk | Suite 1 + US-09 Android integration | 1: 172/172; 3: logger 1/1 on API 36.1 (real device preferences, container restart, offline finish, History and server sync); format/analyze clean. Other integration suites, 2, 4 and M not rerun. | None observed in these runs; US-10 summary/ghost checks remain open. |
 | | | | | | |

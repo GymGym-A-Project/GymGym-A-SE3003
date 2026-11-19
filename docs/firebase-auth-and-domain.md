@@ -136,8 +136,8 @@ the separate `demo-gymgym` project and does not launch the Android app.
 - `WorkoutSessionRepository`: watch/get/save/delete in one user's scope.
   Snapshots sort by newest start time, then ID. Fake instances are independent.
   `SetEntry` is embedded in a session, so it has no independent repository or ID.
-- JSON dates use UTC ISO-8601, matching the Routine convention. A future
-  Firestore adapter must convert dates to/from `Timestamp` at the storage
+- JSON dates use UTC ISO-8601, matching the Routine convention. The
+  Firestore adapters convert dates to/from `Timestamp` at the storage
   boundary. The collection names follow the Week 3 spike:
   `users/{uid}/routines` and `users/{uid}/workouts`.
 
@@ -156,8 +156,11 @@ Rules default to deny, isolate users by authenticated UID, validate routine
 fields/items and workout top-level fields, and deny unknown collections.
 `lastPerformance` is currently read-only for its owner; a future logger/backend
 task must explicitly define its write validation. `FirestoreRoutineRepository`
-persists routines to Firestore; workouts still use the fake repository, so a
-production workout repository is a separate task.
+persists routines to Firestore; `FirestoreWorkoutSessionRepository` persists
+workouts. The US-09 logger keeps unfinished inputs in a UID-scoped device store
+and queues completed sessions through that repository; see
+[Active Workout Logger](workout-logger.md). Ghost values and `lastPerformance`
+writes remain separate US-10 work.
 Exercise screens and their existing attribution remain unchanged.
 
 ## Remaining prerequisites

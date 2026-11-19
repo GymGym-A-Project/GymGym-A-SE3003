@@ -78,6 +78,7 @@ CI runs `dart format`, `flutter analyze --fatal-infos`, `flutter test` and the F
 - [Week 3 Competitor Review: Strong vs. Hevy (`docs/competitor-review.md`)](docs/competitor-review.md)
 - [Week 3 Technical Spike Summary (`docs/spike-summary.md`)](docs/spike-summary.md)
 - [Firebase, Authentication & Domain Contract (`docs/firebase-auth-and-domain.md`)](docs/firebase-auth-and-domain.md)
+- [Active Workout Logger (`docs/workout-logger.md`)](docs/workout-logger.md)
 - [Planning Poker Estimation Log (`docs/planning-poker-estimates.md`)](docs/planning-poker-estimates.md)
 - [Definition of Done (`docs/definition-of-done.md`)](docs/definition-of-done.md)
 - [QA Test Checklist (`docs/qa-test-checklist.md`)](docs/qa-test-checklist.md)
