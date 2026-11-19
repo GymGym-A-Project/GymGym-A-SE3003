@@ -50,4 +50,28 @@ void main() {
       expect(repository.currentUser, isNull);
     },
   );
+  test('Google sign-in keeps the UID of a returning account', () async {
+    final repository = FakeAuthRepository(googleEmail: 'g@example.com');
+    await repository.signInWithGoogle();
+    final first = repository.currentUser!.id;
+    expect(repository.currentUser!.email, 'g@example.com');
+    await repository.signOut();
+    await repository.signInWithGoogle();
+    expect(repository.currentUser!.id, first);
+  });
+
+  test('closing the Google picker reports a cancel, not a sign-in', () async {
+    final repository = FakeAuthRepository();
+    await expectLater(
+      repository.signInWithGoogle(),
+      throwsA(
+        isA<AuthFailure>().having(
+          (f) => f.code,
+          'code',
+          AuthFailure.googleCanceled,
+        ),
+      ),
+    );
+    expect(repository.currentUser, isNull);
+  });
 }

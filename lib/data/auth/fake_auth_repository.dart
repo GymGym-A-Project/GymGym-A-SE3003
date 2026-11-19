@@ -4,10 +4,14 @@ import 'auth_repository.dart';
 
 /// Test-only auth adapter. Never persists credentials or connects to Firebase.
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({AuthUser? user}) {
+  FakeAuthRepository({AuthUser? user, this.googleEmail}) {
     _user = user;
   }
   AuthUser? _user;
+
+  /// Account returned by the fake Google picker; null means the user closes
+  /// the picker.
+  String? googleEmail;
   final Map<String, String> _accounts = {};
   final Set<StreamController<AuthUser?>> _listeners = {};
 
@@ -63,6 +67,14 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> resetPassword(String email) async {
     if (!email.trim().contains('@')) throw const AuthFailure('invalid-email');
+  }
+
+  @override
+  Future<void> signInWithGoogle() async {
+    final email = googleEmail;
+    if (email == null) throw const AuthFailure(AuthFailure.googleCanceled);
+    // The same Google account always maps to the same UID.
+    _publish(AuthUser(id: 'google:$email', email: email));
   }
 
   @override
