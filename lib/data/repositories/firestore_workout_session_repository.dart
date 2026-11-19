@@ -39,6 +39,19 @@ class FirestoreWorkoutSessionRepository implements WorkoutSessionRepository {
       });
 
   @override
+  Future<List<WorkoutSession>> getCached() async {
+    final snapshot = await _workouts
+        .orderBy('startedAt', descending: true)
+        .get(const GetOptions(source: Source.cache));
+    final sessions = snapshot.docs.map((d) => _fromDocument(d.data())).toList()
+      ..sort((a, b) {
+        final time = b.startedAt.compareTo(a.startedAt);
+        return time == 0 ? a.id.compareTo(b.id) : time;
+      });
+    return List.unmodifiable(sessions);
+  }
+
+  @override
   Future<WorkoutSession?> get(String id) async {
     try {
       final document = await _workouts.doc(id).get();

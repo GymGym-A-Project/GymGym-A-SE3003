@@ -45,6 +45,16 @@ void main() {
 
   tearDown(() => repository.dispose());
 
+  test('cache reads retain sorting and cannot cross the user scope', () async {
+    await repository.save(_session('b'));
+    await repository.save(_session('a'));
+    final cached = await repository.getCached();
+    expect(cached.map((s) => s.id), ['a', 'b']);
+    final other = FirestoreWorkoutSessionRepository(firestore, 'another-user');
+    addTearDown(other.dispose);
+    expect(await other.getCached(), isEmpty);
+  });
+
   test(
     'server rejection emits a failure without blocking local writes',
     () async {

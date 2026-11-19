@@ -6,11 +6,14 @@ import '../../core/router.dart';
 import '../../data/auth/auth_providers.dart';
 import '../../data/exercise_catalog.dart';
 import '../../data/models/exercise.dart';
+import '../../data/models/set_entry.dart';
 import '../../data/repositories/workout_session_providers.dart';
 import '../exercises/exercise_widgets.dart';
 import '../routines/exercise_picker_screen.dart';
 import 'active_workout.dart';
 import 'workout_draft.dart';
+import 'ghost_values.dart';
+import 'workout_summary.dart';
 
 class LoggerScreen extends ConsumerStatefulWidget {
   const LoggerScreen({super.key});
@@ -53,7 +56,6 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
       final repository = ref.read(workoutSessionRepositoryProvider);
       if (repository == null) throw StateError('Please sign in again.');
       await ref.read(activeWorkoutProvider(uid).notifier).finish(repository);
-      if (mounted) context.go(AppRoutes.history);
     });
     if (mounted) setState(() => _busy = false);
   }
@@ -160,12 +162,18 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
             );
           }
           if (draft.isFinished) {
-            return Center(
+            return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Text(
+                      draft.routineName,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    WorkoutSummary(session: draft.toSession()),
+                    const SizedBox(height: 16),
                     const Text('Workout saved on this device'),
                     const Text('Offline changes will sync when you reconnect.'),
                     FilledButton(
@@ -196,6 +204,9 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                   ),
                 ),
                 data: (exercises) {
+                  final ghosts = ref.watch(
+                    ghostValuesProvider(draft.startedAt),
+                  );
                   final byId = {for (final e in exercises) e.id: e};
                   final controller = ref.read(
                     activeWorkoutProvider(uid).notifier,
@@ -203,6 +214,7 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                   return AbsorbPointer(
                     absorbing: _busy,
                     child: ListView(
+                      key: const ValueKey('workout-inputs'),
                       padding: const EdgeInsets.all(16),
                       children: [
                         Text(
@@ -212,11 +224,38 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                         const Text(
                           'Entries are saved on this device as you type.',
                         ),
+                        const Text(
+                          'Enter actual kg and reps, or confirm the previous values with Complete set.',
+                        ),
+                        if (ghosts.isLoading && !ghosts.hasValue)
+                          const Text('Loading previous sets…')
+                        else if (ghosts.hasError)
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Previous values unavailable. You can still log your workout.',
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => ref.invalidate(
+                                  ghostValuesProvider(draft.startedAt),
+                                ),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          )
+                        else if (ghosts.value?.sets.isEmpty ?? true)
+                          const Text(
+                            'No previous sets available on this device yet.',
+                          ),
                         for (final e in draft.exercises)
                           _ExerciseEditor(
                             key: ValueKey('$uid:${draft.id}:${e.exerciseId}'),
                             exercise: byId[e.exerciseId],
                             draft: e,
+                            previous:
+                                ghosts.value?.sets[e.exerciseId] ?? const [],
                             showErrors:
                                 _showErrors && _validatedDraftId == draft.id,
                             canRemove: draft.exercises.length > 1,
@@ -269,6 +308,7 @@ class _ExerciseEditor extends StatelessWidget {
     super.key,
     required this.exercise,
     required this.draft,
+    required this.previous,
     required this.showErrors,
     required this.canRemove,
     required this.update,
@@ -278,6 +318,7 @@ class _ExerciseEditor extends StatelessWidget {
   });
   final Exercise? exercise;
   final WorkoutExerciseDraft draft;
+  final List<SetEntry> previous;
   final bool showErrors;
   final bool canRemove;
   final void Function(String, String?, String?) update;
@@ -311,49 +352,85 @@ class _ExerciseEditor extends StatelessWidget {
             Padding(
               key: ValueKey(set.id),
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16, right: 8),
-                    child: Text('${i + 1}'),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16, right: 8),
+                        child: Text('${i + 1}'),
+                      ),
+                      Expanded(
+                        child: _DraftNumberField(
+                          key: ValueKey('weight-${draft.exerciseId}-${set.id}'),
+                          value: set.weight,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'kg',
+                            hintText: i < previous.length
+                                ? ghostWeight(previous[i].weightKg)
+                                : null,
+                            hintStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.55),
+                            ),
+                            errorMaxLines: 3,
+                            errorText: showErrors ? set.weightError : null,
+                          ),
+                          onChanged: (value) => update(set.id, value, null),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _DraftNumberField(
+                          key: ValueKey('reps-${draft.exerciseId}-${set.id}'),
+                          value: set.reps,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Reps',
+                            hintText: i < previous.length
+                                ? '${previous[i].reps}'
+                                : null,
+                            hintStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.55),
+                            ),
+                            errorMaxLines: 3,
+                            errorText: showErrors ? set.repsError : null,
+                          ),
+                          onChanged: (value) => update(set.id, null, value),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Remove set',
+                        onPressed: draft.sets.length > 1
+                            ? () => removeSet(set.id)
+                            : null,
+                        icon: const Icon(Icons.remove_circle_outline),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: TextFormField(
-                      key: ValueKey('weight-${draft.exerciseId}-${set.id}'),
-                      initialValue: set.weight,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                  if (i < previous.length)
+                    TextButton.icon(
+                      key: ValueKey('complete-${draft.exerciseId}-${set.id}'),
+                      onPressed: () => update(
+                        set.id,
+                        set.weight.isEmpty
+                            ? ghostWeight(previous[i].weightKg)
+                            : null,
+                        set.reps.isEmpty ? '${previous[i].reps}' : null,
                       ),
-                      decoration: InputDecoration(
-                        labelText: 'kg',
-                        errorMaxLines: 3,
-                        errorText: showErrors ? set.weightError : null,
-                      ),
-                      onChanged: (value) => update(set.id, value, null),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Complete set'),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      key: ValueKey('reps-${draft.exerciseId}-${set.id}'),
-                      initialValue: set.reps,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Reps',
-                        errorMaxLines: 3,
-                        errorText: showErrors ? set.repsError : null,
-                      ),
-                      onChanged: (value) => update(set.id, null, value),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Remove set',
-                    onPressed: draft.sets.length > 1
-                        ? () => removeSet(set.id)
-                        : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                  ),
                 ],
               ),
             ),
@@ -367,5 +444,51 @@ class _ExerciseEditor extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+/// Keeps native editing state while allowing an explicit ghost confirmation to
+/// update the visible text. Provider refreshes never overwrite actual entries.
+class _DraftNumberField extends StatefulWidget {
+  const _DraftNumberField({
+    super.key,
+    required this.value,
+    required this.keyboardType,
+    required this.decoration,
+    required this.onChanged,
+  });
+  final String value;
+  final TextInputType keyboardType;
+  final InputDecoration decoration;
+  final ValueChanged<String> onChanged;
+  @override
+  State<_DraftNumberField> createState() => _DraftNumberFieldState();
+}
+
+class _DraftNumberFieldState extends State<_DraftNumberField> {
+  late final _controller = TextEditingController(text: widget.value);
+  @override
+  void didUpdateWidget(covariant _DraftNumberField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_controller.text != widget.value) {
+      _controller.value = TextEditingValue(
+        text: widget.value,
+        selection: TextSelection.collapsed(offset: widget.value.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextFormField(
+    controller: _controller,
+    keyboardType: widget.keyboardType,
+    decoration: widget.decoration,
+    onChanged: widget.onChanged,
   );
 }
