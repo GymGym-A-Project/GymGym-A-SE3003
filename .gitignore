@@ -45,3 +45,6 @@ spike/
 
 firestore-debug.log
 *-debug.log
+
+# Locally recorded M3 demo videos and verification frames
+output/m3-demo/

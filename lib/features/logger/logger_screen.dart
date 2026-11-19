@@ -371,6 +371,7 @@ class _ExerciseEditor extends StatelessWidget {
                           ),
                           decoration: InputDecoration(
                             labelText: 'kg',
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: i < previous.length
                                 ? ghostWeight(previous[i].weightKg)
                                 : null,
@@ -394,6 +395,7 @@ class _ExerciseEditor extends StatelessWidget {
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             labelText: 'Reps',
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: i < previous.length
                                 ? '${previous[i].reps}'
                                 : null,

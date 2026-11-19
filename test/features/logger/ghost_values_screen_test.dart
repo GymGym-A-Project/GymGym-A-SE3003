@@ -59,6 +59,10 @@ void main() {
     final weight = input(tester, 'weight-1-0');
     expect(weight.controller!.text, '');
     expect(weight.decoration!.hintText, '62.5');
+    expect(
+      weight.decoration!.floatingLabelBehavior,
+      FloatingLabelBehavior.always,
+    );
     expect(input(tester, 'reps-1-0').decoration!.hintText, '8');
     await tester.ensureVisible(find.byKey(const ValueKey('finish-workout')));
     await tester.tap(find.byKey(const ValueKey('finish-workout')));
