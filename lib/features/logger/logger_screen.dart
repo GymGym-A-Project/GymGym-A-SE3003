@@ -3,12 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
+import '../../core/theme/app_text.dart';
+import '../../core/theme/gaps.dart';
+import '../../core/theme/gym_colors.dart';
+import '../../core/widgets/attribution_note.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/set_row.dart';
+import '../../core/widgets/stat_tile.dart';
 import '../../data/auth/auth_providers.dart';
 import '../../data/exercise_catalog.dart';
 import '../../data/models/exercise.dart';
 import '../../data/models/set_entry.dart';
 import '../../data/repositories/workout_session_providers.dart';
 import '../exercises/exercise_widgets.dart';
+import '../history/history_format.dart';
 import '../routines/exercise_picker_screen.dart';
 import 'active_workout.dart';
 import 'workout_draft.dart';
@@ -130,12 +138,12 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
       appBar: AppBar(title: const Text('Workout')),
       body: active.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        error: (_, _) => EmptyState(
+          icon: Icons.restore,
+          title: 'Could not restore your workout.',
+          action: Column(
             children: [
-              const Text('Could not restore your workout.'),
-              TextButton(
+              FilledButton(
                 onPressed: () => ref.invalidate(activeWorkoutProvider(uid)),
                 child: const Text('Retry'),
               ),
@@ -148,48 +156,64 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
         ),
         data: (draft) {
           if (draft == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('No active workout'),
-                  FilledButton(
-                    onPressed: () => context.go(AppRoutes.routines),
-                    child: const Text('Choose a routine'),
-                  ),
-                ],
+            return EmptyState(
+              icon: Icons.play_arrow_rounded,
+              title: 'No active workout',
+              message: 'Start a workout from one of your routines.',
+              action: FilledButton(
+                onPressed: () => context.go(AppRoutes.routines),
+                child: const Text('Choose a routine'),
               ),
             );
           }
           if (draft.isFinished) {
+            final colors = GymColors.of(context);
             return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      draft.routineName,
-                      style: Theme.of(context).textTheme.titleMedium,
+              padding: const EdgeInsets.fromLTRB(
+                Gap.screen,
+                Gap.l,
+                Gap.screen,
+                Gap.xl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    draft.routineName,
+                    textAlign: TextAlign.center,
+                    style: AppText.headline.copyWith(color: colors.textMuted),
+                  ),
+                  Gap.vL,
+                  WorkoutSummary(session: draft.toSession()),
+                  Gap.vXl,
+                  Text(
+                    'Workout saved on this device',
+                    textAlign: TextAlign.center,
+                    style: AppText.body.copyWith(color: colors.text),
+                  ),
+                  Text(
+                    'Offline changes will sync when you reconnect.',
+                    textAlign: TextAlign.center,
+                    style: AppText.body.copyWith(
+                      fontSize: 13,
+                      color: colors.textMuted,
                     ),
-                    WorkoutSummary(session: draft.toSession()),
-                    const SizedBox(height: 16),
-                    const Text('Workout saved on this device'),
-                    const Text('Offline changes will sync when you reconnect.'),
-                    FilledButton(
-                      onPressed: () => context.go(AppRoutes.history),
-                      child: const Text('View history'),
-                    ),
-                    TextButton(
-                      onPressed: _busy ? null : () => _finish(uid),
-                      child: const Text('Retry saving workout'),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go(AppRoutes.routines),
-                      child: const Text('Choose next routine'),
-                    ),
-                  ],
-                ),
+                  ),
+                  Gap.vL,
+                  FilledButton(
+                    onPressed: () => context.go(AppRoutes.history),
+                    child: const Text('View history'),
+                  ),
+                  Gap.vS,
+                  OutlinedButton(
+                    onPressed: () => context.go(AppRoutes.routines),
+                    child: const Text('Choose next routine'),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : () => _finish(uid),
+                    child: const Text('Retry saving workout'),
+                  ),
+                ],
               ),
             );
           }
@@ -215,25 +239,28 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                     absorbing: _busy,
                     child: ListView(
                       key: const ValueKey('workout-inputs'),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(
+                        Gap.screen,
+                        Gap.s,
+                        Gap.screen,
+                        Gap.xl,
+                      ),
                       children: [
-                        Text(
-                          draft.routineName,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const Text(
+                        _WorkoutHeader(draft: draft),
+                        Gap.vM,
+                        const _Hint(
                           'Entries are saved on this device as you type.',
                         ),
-                        const Text(
+                        const _Hint(
                           'Enter actual kg and reps, or confirm the previous values with Complete set.',
                         ),
                         if (ghosts.isLoading && !ghosts.hasValue)
-                          const Text('Loading previous sets…')
+                          const _Hint('Loading previous sets…')
                         else if (ghosts.hasError)
                           Row(
                             children: [
                               const Expanded(
-                                child: Text(
+                                child: _Hint(
                                   'Previous values unavailable. You can still log your workout.',
                                 ),
                               ),
@@ -246,9 +273,10 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                             ],
                           )
                         else if (ghosts.value?.sets.isEmpty ?? true)
-                          const Text(
+                          const _Hint(
                             'No previous sets available on this device yet.',
                           ),
+                        Gap.vS,
                         for (final e in draft.exercises)
                           _ExerciseEditor(
                             key: ValueKey('$uid:${draft.id}:${e.exerciseId}'),
@@ -276,6 +304,7 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                               () => controller.toggleExercise(e.exerciseId),
                             ),
                           ),
+                        Gap.vS,
                         OutlinedButton.icon(
                           onPressed: () => _pick(uid),
                           icon: const Icon(Icons.add),
@@ -283,13 +312,18 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
                             'Add exercises (${draft.exercises.length}/15)',
                           ),
                         ),
+                        Gap.vM,
                         FilledButton(
                           key: const ValueKey('finish-workout'),
                           onPressed: () => _finish(uid),
                           child: Text(_busy ? 'Saving…' : 'Finish workout'),
                         ),
+                        Gap.vS,
                         TextButton(
                           onPressed: () => _discard(uid),
+                          style: TextButton.styleFrom(
+                            foregroundColor: GymColors.of(context).danger,
+                          ),
                           child: const Text('Discard workout'),
                         ),
                       ],
@@ -301,6 +335,82 @@ class _LoggerScreenState extends ConsumerState<LoggerScreen> {
       ),
     );
   }
+}
+
+/// Routine name, "in progress" badge and live volume / set counters.
+class _WorkoutHeader extends StatelessWidget {
+  const _WorkoutHeader({required this.draft});
+  final WorkoutDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GymColors.of(context);
+    final sets = [for (final e in draft.exercises) ...e.sets];
+    final done = sets.where((s) => s.isValid).toList();
+    final volume = done.fold(
+      0.0,
+      (sum, s) => sum + s.parsedWeight! * s.parsedReps!,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: colors.kor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: Gap.s),
+            Text(
+              'IN PROGRESS',
+              style: AppText.label.copyWith(color: colors.kor),
+            ),
+          ],
+        ),
+        const SizedBox(height: Gap.xs),
+        Text(
+          draft.routineName,
+          style: AppText.title.copyWith(color: colors.text),
+        ),
+        Gap.vM,
+        Row(
+          children: [
+            Expanded(
+              child: StatTile(label: 'VOLUME', value: formatKg(volume)),
+            ),
+            Gap.hS,
+            Expanded(
+              child: StatTile(
+                label: 'SETS',
+                value: '${done.length} / ${sets.length}',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: Gap.xs),
+    child: Text(
+      text,
+      style: AppText.body.copyWith(
+        fontSize: 13,
+        color: GymColors.of(context).textMuted,
+      ),
+    ),
+  );
 }
 
 class _ExerciseEditor extends StatelessWidget {
@@ -327,170 +437,95 @@ class _ExerciseEditor extends StatelessWidget {
   final VoidCallback removeExercise;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  exercise?.name ?? 'Unknown exercise (${draft.exerciseId})',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              IconButton(
-                tooltip: 'Remove exercise',
-                onPressed: canRemove ? removeExercise : null,
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          for (final (i, set) in draft.sets.indexed)
-            Padding(
-              key: ValueKey(set.id),
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+  Widget build(BuildContext context) {
+    final colors = GymColors.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(Gap.m, Gap.m, Gap.xs, Gap.s),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                ExerciseThumbnail(exercise?.thumbPath),
+                Gap.hM,
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16, right: 8),
-                        child: Text('${i + 1}'),
+                      Text(
+                        exercise?.name ??
+                            'Unknown exercise (${draft.exerciseId})',
+                        style: AppText.headline.copyWith(color: colors.kor),
                       ),
-                      Expanded(
-                        child: _DraftNumberField(
-                          key: ValueKey('weight-${draft.exerciseId}-${set.id}'),
-                          value: set.weight,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+                      if (exercise != null)
+                        Text(
+                          exerciseSummary(exercise!),
+                          style: AppText.body.copyWith(
+                            fontSize: 13,
+                            color: colors.textMuted,
                           ),
-                          decoration: InputDecoration(
-                            labelText: 'kg',
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: i < previous.length
-                                ? ghostWeight(previous[i].weightKg)
-                                : null,
-                            hintStyle: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant
-                                  .withValues(alpha: 0.55),
-                            ),
-                            errorMaxLines: 3,
-                            errorText: showErrors ? set.weightError : null,
-                          ),
-                          onChanged: (value) => update(set.id, value, null),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _DraftNumberField(
-                          key: ValueKey('reps-${draft.exerciseId}-${set.id}'),
-                          value: set.reps,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: 'Reps',
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: i < previous.length
-                                ? '${previous[i].reps}'
-                                : null,
-                            hintStyle: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant
-                                  .withValues(alpha: 0.55),
-                            ),
-                            errorMaxLines: 3,
-                            errorText: showErrors ? set.repsError : null,
-                          ),
-                          onChanged: (value) => update(set.id, null, value),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Remove set',
-                        onPressed: draft.sets.length > 1
-                            ? () => removeSet(set.id)
-                            : null,
-                        icon: const Icon(Icons.remove_circle_outline),
-                      ),
                     ],
                   ),
-                  if (i < previous.length)
-                    TextButton.icon(
-                      key: ValueKey('complete-${draft.exerciseId}-${set.id}'),
-                      onPressed: () => update(
-                        set.id,
-                        set.weight.isEmpty
-                            ? ghostWeight(previous[i].weightKg)
-                            : null,
-                        set.reps.isEmpty ? '${previous[i].reps}' : null,
-                      ),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Complete set'),
-                    ),
-                ],
+                ),
+                IconButton(
+                  tooltip: 'Remove exercise',
+                  onPressed: canRemove ? removeExercise : null,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            Gap.vS,
+            for (final (i, set) in draft.sets.indexed)
+              Padding(
+                key: ValueKey(set.id),
+                padding: const EdgeInsets.only(bottom: Gap.xs),
+                child: SetRow(
+                  number: i + 1,
+                  weight: set.weight,
+                  reps: set.reps,
+                  weightKey: ValueKey('weight-${draft.exerciseId}-${set.id}'),
+                  repsKey: ValueKey('reps-${draft.exerciseId}-${set.id}'),
+                  completeKey: ValueKey(
+                    'complete-${draft.exerciseId}-${set.id}',
+                  ),
+                  ghostWeight: i < previous.length
+                      ? ghostWeight(previous[i].weightKg)
+                      : null,
+                  ghostReps: i < previous.length ? '${previous[i].reps}' : null,
+                  weightError: showErrors ? set.weightError : null,
+                  repsError: showErrors ? set.repsError : null,
+                  completed: set.isValid,
+                  onWeightChanged: (value) => update(set.id, value, null),
+                  onRepsChanged: (value) => update(set.id, null, value),
+                  onComplete: i < previous.length
+                      ? () => update(
+                          set.id,
+                          set.weight.isEmpty
+                              ? ghostWeight(previous[i].weightKg)
+                              : null,
+                          set.reps.isEmpty ? '${previous[i].reps}' : null,
+                        )
+                      : null,
+                  onRemove: draft.sets.length > 1
+                      ? () => removeSet(set.id)
+                      : null,
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: addSet,
+                icon: const Icon(Icons.add),
+                label: const Text('Add set'),
               ),
             ),
-          TextButton.icon(
-            onPressed: addSet,
-            icon: const Icon(Icons.add),
-            label: const Text('Add set'),
-          ),
-          if (exercise?.attribution.isNotEmpty ?? false)
-            ExerciseAttribution(exercise!.attribution),
-        ],
+            if (exercise?.attribution.isNotEmpty ?? false)
+              AttributionNote(exercise!.attribution),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
-/// Keeps native editing state while allowing an explicit ghost confirmation to
-/// update the visible text. Provider refreshes never overwrite actual entries.
-class _DraftNumberField extends StatefulWidget {
-  const _DraftNumberField({
-    super.key,
-    required this.value,
-    required this.keyboardType,
-    required this.decoration,
-    required this.onChanged,
-  });
-  final String value;
-  final TextInputType keyboardType;
-  final InputDecoration decoration;
-  final ValueChanged<String> onChanged;
-  @override
-  State<_DraftNumberField> createState() => _DraftNumberFieldState();
-}
-
-class _DraftNumberFieldState extends State<_DraftNumberField> {
-  late final _controller = TextEditingController(text: widget.value);
-  @override
-  void didUpdateWidget(covariant _DraftNumberField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_controller.text != widget.value) {
-      _controller.value = TextEditingValue(
-        text: widget.value,
-        selection: TextSelection.collapsed(offset: widget.value.length),
-      );
-    }
+    );
   }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => TextFormField(
-    controller: _controller,
-    keyboardType: widget.keyboardType,
-    decoration: widget.decoration,
-    onChanged: widget.onChanged,
-  );
 }
