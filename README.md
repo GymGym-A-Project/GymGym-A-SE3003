@@ -85,3 +85,4 @@ CI runs `dart format`, `flutter analyze --fatal-infos`, `flutter test` and the F
 - [M3 Status Summary & Sprint 2 Priorities (`docs/m3-status-summary.md`)](docs/m3-status-summary.md)
 - [Plateau proxy API, privacy boundary and deployment handoff (`docs/plateau-proxy.md`)](docs/plateau-proxy.md)
 - [Submitted Milestone Reports (`docs/reports/`)](docs/reports/)
+- [M3 Midterm Project Review Report (v1.1, 20 November 2026)](docs/reports/GYMGYM-A_M3_Midterm_Project_Review_Report_EN.docx)
